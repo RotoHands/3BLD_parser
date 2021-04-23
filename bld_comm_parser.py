@@ -72,8 +72,6 @@ def extendAlg(currentAlg):
     B = tempAlg[tempAlg.find(",") + 1:tempAlg.find("]")].strip()
 
     All =[A,B,C]
-
-    print(All)
     return All
 
 def cancel (f,s):
@@ -160,8 +158,8 @@ def alg_maker(comm_str):
 
             final = final.replace("  ", " ")
             final = final.strip()
-
-
+        else:
+            return comm_str
     return final
 
 def transposeAndReverseTable(sheet_name):
@@ -177,9 +175,17 @@ def transposeAndReverseTable(sheet_name):
                 print(currentAlg)
     file.save(r"C:\Users\rotem\PycharmProjects\pythonProject\BLD\ROTO 3bld Algs.xlsx")
 
-def f1():
-    pyperclip.copy(reverseAlgCor(pyperclip.paste()))
+
+def solve_parser(solve):
+    solve_split =  solve.split("\r\n")
+    solve = ""
+    print(solve_split)
+    for comm in solve_split:
+        if comm.find("/") != -1:
+            comm = comm[:comm.find("/")]
+        solve += " " + str(alg_maker(comm))
+    return solve
 def main():
-    pass
+    print(solve_parser(pyperclip.paste()))
 if __name__ == '__main__':
     main()

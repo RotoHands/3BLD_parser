@@ -186,6 +186,6 @@ def solve_parser(solve):
         solve += " " + str(alg_maker(comm))
     return solve
 def main():
-    print(solve_parser(pyperclip.paste()))
+    pass
 if __name__ == '__main__':
     main()

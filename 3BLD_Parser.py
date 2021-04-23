@@ -1,5 +1,5 @@
 
-from bld_comm_parser import alg_maker
+from bld_comm_parser import solve_parser
 import permutation
 import re
 import pyperclip
@@ -541,40 +541,27 @@ class Cube:
             if move in self.rotations:
                 self.apply_rotation(move)
 
-def main():
+def parse_solve(scramble, solve):
+    solve = solve_parser(solve)
+
     SOLVED = "0UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
-    MISTAKE_SOLVE_CORNERS = "D D U' R' U' D B2 U D' R' U D' D' U' D B' U D' R U' R' U' D B U2 D' U' R' L F R' L D2 R L' F R L' U D' F U' D R' U' R U D' F' U D R' L F R F B' D' D' F' B R F' L' R L' U L U' R' L F L' F' R R U2 R D R' U U R D' R' R' R U R D' R' U' R D R' R' R R R D D U' R'"
-    # SOLVE = "D U' D R' U' D B B U D' R' D' U D' U' D B' U D' R U' R' U' D B U D' U U' R' L F R' L D' D' R L' F R L' U D' F U' D R' U' R U D' F' U D R' L F R F B' D' D' F' B R F' L' R L' U L U' R' L F L' F' R R U U R D R' U2 R D' R' R' R U R D' R' U' R D R' R' R' U D' R' D R U' R' D' R D R D' L' D L D' L' D R' D' L D L' D' L D R"
-    # SCRAMBLE = "B2 F2 U2 F2 D R2 U' L2 D L2 F2 B' R' U B2 D R D' L B U'"
-
-    SOLVE = " U L' L' R' R U' R' L F L' L' F' R L' R' L F R' F' L' R U R U' F B' U F' U' F' B L F L' U U' R' U' R' U' D B B D' U R' U R U' D F' U F U D' L' U' L D R L' F R' L D R L' F R' L R' U D' F U' F' U' D R U U' R' R' D' R U U R' D R U U R U U D' R U' R' D R U R' U' U D U R' D R U2 R' D' R D' U D R' D' R U' R' D R D' R U R' F' R U R' U' R' F R R U' R' U'"
-    SCRAMBLE = "L2 U R2 F2 R2 B2 D2 U F2 U L2 R B L' F D L' D' L2 F2 U'"
-
-    SCRAMBLE = "F' L2 B2 U2 F' R2 B2 L2 D2 F' U' R U' L2 D' F L U2 B D' Rw Uw"
-    SOLVE = "z' y' U2 L U' M' U L' U' M U' L' Lw U' Lw F M' F' Lw' U S' U' R' E R U R' E' R S D L F' L' S L F L' S' D' R' D' U' R' D R U' R' D' R U2 D R U' D' R D R' U R D' D D' R' D U D R D' U' R' D R U R' D' R D R' U' D' R U D R' F' R U R' U' R' F R2 U' R' U' R D' R'"
-    SCRAMBLE = "D2 L' F' R' B' R B D R' F2 B2 D2 L' F2 D2 L D2 R' Rw2 Uw"
-    SOLVE = "y' x2 y z'  Rw' U' M' U2 M' U M U2 R  U R F' R' S R F R' S' U' R' F' R S R' F' R S' R' F2 R L F L' S' L F L' S L F2 L' D' M2 D L' D' M2 D L R2 U R' U' R D' R' U R D U' R2 D R' U R D R' U' R D2 z R' D2 R U R' D2 R U' z' R D R' D' R D R' U R D' R' D R D' R' U'"
-
     cube = Cube()
-    cube.scramble = SCRAMBLE
-    cube.solve = SOLVE
-    cube.solve_helper = SOLVE
+    cube.scramble = scramble
+    cube.solve = solve
+    cube.solve_helper = solve
     cube.current_facelet = SOLVED
-    SCRAMBLE_LIST = SCRAMBLE.split()
+    SCRAMBLE_LIST = scramble.split()
     for move in SCRAMBLE_LIST:
         cube.exe_move(move)
-
     count = 0
-    max_piece_place = 0
     cube.solve_stats.append({"count": count, "move": "", "ed": cube.count_solve_edges(), "cor": cube.count_solved_cor(), "comment": ""})
     cube.current_max_perm_list = (cube.current_perm)
     move_in_solve = cube.solve.split()
+    max_piece_place = 0
     for move in move_in_solve:
         original_move = move
         exe_move = cube.solve_helper.split()[count]
-        print(exe_move, end=" ")
         count += 1
-        # print("{} : {}".format(move, exe_move))
         if move in cube.rotation:
             cube.exe_move(exe_move)
             # cube.current_max_perm_list = (cube.current_perm)
@@ -601,17 +588,15 @@ def main():
             if diff > 0.89 and (count - max_piece_place > 4): #18:
                 max_piece_place = count
                 cube.last_solved_pieces = cube.diff_solved_state()
-                # print("count : {} : {}".format(count, cube.last_solved_pieces))
-
                 comm = cube.parse_solved_to_comm()
                 cube.current_max_perm_list = cube.current_perm
-
                 cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "//{}%0A".format("_".join(comm[:])),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
             else:
                 cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
-
     cube.gen_url()
-    print(*cube.solve_stats, sep="\n")
-    print(alg_maker(" [R' S' R, F] "))
+    return cube
+
+def main():
+    pass
 if __name__ == '__main__':
     main()

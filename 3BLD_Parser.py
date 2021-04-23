@@ -468,12 +468,14 @@ class Cube:
         self.current_facelet = "{}{}".format("0",''.join(facelet[1:]))
 
     def y_rotation(self):
-        solve = self.solve_helper.translate(str.maketrans('RrBbLlFfMz', 'BbLlFfRrSx'))
-        solve.replace("S", "M'")
-        solve.replace("x", "z'")
-        solve.replace("''","")
-        self.solve_helper = solve
 
+        before = ('R','r', 'B', 'b', 'L', 'l','F','f','M', 'z' ,'S', 'x')
+        after = ('B','b', 'L','l','F','f','R','r','S','x',"M'", "z'")
+        solve = self.solve_helper.maketrans(dict(zip(before, after)))
+        solve_trans = self.solve_helper.translate(solve)
+        solve_trans = solve_trans.replace("\'\'","")
+        self.solve_helper = solve_trans
+        print(self.solve_helper)
     def y2_rotation(self):
         self.y_rotation()
         self.y_rotation()
@@ -508,15 +510,16 @@ def main():
     # SOLVE = "U2 R' D R U2 R' D' R"
     # SCRAMBLE = "U' B2 R2 D2 F2 U R2 D U' F R D B2 D2 L' F2 U R2 B2 D2 Rw'"
     # SOLVE = "x M' U' M' U' M U' M' U' M2' U' L' U' L' U L U L U L' l' U' l' E' l2' E' l' U l U' R' F' R S R' F R S' U D R' U R D' R' U2 R D R' U R D' U' R2' D' R U' R' D R U R U U' R U' R' D R U R' D' U U D' R' U' R D' R' U R D2 U'"
-    SCRAMBLE = "U' B2 R2 D2 F2 U R2 D U' F R D B2 D2 L' F2 U R2 B2 D2 Rw' "
-    SOLVE = "x M' U' M' U' M U' M' U' M2' U' L' U' L' U L U L U L' l' U' l' E' l2' E' l' U l U' R' F' R S R' F R S' U D R' U R D' R' U2 R D R' U R D' U' R2' D' R U' R' D R U R U U' R U' R' D R U R' D' U U D' R' U' R D' R' U R D2 U'"
+    SCRAMBLE = "y2 U' B2 R2 D2 F2 U R2 D U' F R D B2 D2 L' F2 U R2 B2 D2 Rw' "
+    SOLVE = "y' x M' U' M' U' M U' M' U' M2' U' L' U' L' U L U L U L' l' U' l' E' l2' E' l' U l U' R' F' R S R' F R S' U D R' U R D' R' U2 R D R' U R D' U' R2' D' R U' R' D R U R U U' R U' R' D R U R' D' U U D' R' U' R D' R' U R D2 U'"
+    SCRAMBLE = "y F' L2 B2 U2 F' R2 B2 L2 D2 F' U' R U' L2 D' F L U2 B D' Rw Uw z' y2"
+    SOLVE = "y U2 L U' M' U L' U' M U' L' Lw U' Lw F M' F' Lw' U S' U' R' E R U R' E' R S D L F' L' S L F L' S' D' R' D' U' R' D R U' R' D' R U2 D R U' D' R D R' U R D' D D' R' D U D R D' U' R' D R U R' D' R D R' U' D' R U D R' F' R U R' U' R' F R2 U' R' U' R D' R'"
     cube = Cube()
     cube.scramble = SCRAMBLE
     cube.solve = SOLVE
     cube.solve_helper = SOLVE
     cube.current_facelet = SOLVED
     SCRAMBLE_LIST = SCRAMBLE.split()
-    # cube.apply_rotation("y")
     for move in SCRAMBLE_LIST:
         cube.exe_move(move)
     max_solved = cube.count_solve_edges()
@@ -528,17 +531,22 @@ def main():
     max_piece_place = 0
     cube.solve_stats.append({"count": count, "move": "", "ed": cube.count_solve_edges(), "cor": cube.count_solved_cor(), "comment": ""})
     cube.current_max_perm_list = (cube.current_perm)
-
-    for move in cube.solve.split():
-        # exe_move = cube.solve_helper.split()[count]
-        exe_move = move
+    print(cube.current_perm)
+    move_in_solve = cube.solve.split()
+    for move in move_in_solve:
+        original_move = move
+        exe_move = cube.solve_helper.split()[count]
         cube.exe_move(exe_move)
+        print(exe_move, end=" ")
         count += 1
         # print("{} : {}".format(move, exe_move))
         if move in cube.rotation:
             print(cube.current_perm)
         #     print("move : {}".format(move))
-            cube.current_max_perm_list = cube.current_perm
+        #     cube.current_max_perm_list = cube.current_perm
+            cube.apply_rotation(exe_move)
+            cube.exe_move("y'")
+            print(cube.current_perm)
         solved_edges =  cube.count_solve_edges()
         solved_cor = cube.count_solved_cor()
         diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
@@ -553,9 +561,9 @@ def main():
             comm = cube.parse_solved_to_comm()
             cube.current_max_perm_list = cube.current_perm
 
-            cube.solve_stats.append({"count" : count,"move": move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "//{}%0A".format("_".join(comm[:])),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+            cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "//{}%0A".format("_".join(comm[:])),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
         else:
-            cube.solve_stats.append({"count" : count,"move": move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+            cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 
     cube.gen_url()
     print(*cube.solve_stats, sep="\n")

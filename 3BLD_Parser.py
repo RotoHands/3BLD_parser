@@ -475,26 +475,31 @@ class Cube:
         rotations = []
         for move in cube_helper.scramble:
             cube_helper.exe_move(move)
-
+        print(cube_helper.perm_to_string(cube_helper.current_perm))
         for move in cube_helper.solve:
             if move not in cube_helper.rotation:
                 break
         str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
+        print(str_perm)
         up = str_perm[4]
         front = str_perm[22]
 
 
         for i in range (4):
-            if (up == "U"):
+            if (up == "5"):
                 break
             rotations.append("x")
             cube_helper.exe_move("x")
-        if (front != "F"):
+            up = str_perm[4]
+
+
+        if (front != "23"):
             rotations.append("z")
             cube_helper.exe_move("z")
-        while (up != "U" and front != "F"):
+        while (up != "5" and front != "23"):
             rotations.append("y")
             cube_helper.exe_move("y")
+            front = str_perm[22]
         return rotations
 
     def y_rotation(self):
@@ -578,8 +583,11 @@ def parse_solve(scramble, solve):
     cube.solve_helper = solve
     cube.current_facelet = SOLVED
     SCRAMBLE_LIST = scramble.split()
-    for move in cube.fix_rotation():
-        cube.exe_move(move)
+    print(cube.current_perm)
+    rot = cube.fix_rotation()
+    print(rot)
+    for move in rot:
+         cube.exe_move(move)
     for move in SCRAMBLE_LIST:
         cube.exe_move(move)
     count = 0

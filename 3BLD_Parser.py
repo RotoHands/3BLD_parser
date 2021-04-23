@@ -333,9 +333,6 @@ class Cube:
         "z2'": self.z2
 
     }
-
-        # funcMoves.get('R')()
-
         funcMoves.get(move)()
 
 
@@ -470,6 +467,36 @@ class Cube:
 
         self.current_facelet = "{}{}".format("0",''.join(facelet[1:]))
 
+    def fix_rotation(self):
+        cube_helper = Cube()
+        cube_helper.scramble = self.scramble.split()
+        cube_helper.solve = self.solve.split()
+
+        rotations = []
+        for move in cube_helper.scramble:
+            cube_helper.exe_move(move)
+
+        for move in cube_helper.solve:
+            if move not in cube_helper.rotation:
+                break
+        str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
+        up = str_perm[4]
+        front = str_perm[22]
+
+
+        for i in range (4):
+            if (up == "U"):
+                break
+            rotations.append("x")
+            cube_helper.exe_move("x")
+        if (front != "F"):
+            rotations.append("z")
+            cube_helper.exe_move("z")
+        while (up != "U" and front != "F"):
+            rotations.append("y")
+            cube_helper.exe_move("y")
+        return rotations
+
     def y_rotation(self):
 
         before = ('R','r', 'B', 'b', 'L', 'l','F','f','M' , 'z' ,'S', 'x')
@@ -551,6 +578,8 @@ def parse_solve(scramble, solve):
     cube.solve_helper = solve
     cube.current_facelet = SOLVED
     SCRAMBLE_LIST = scramble.split()
+    for move in cube.fix_rotation():
+        cube.exe_move(move)
     for move in SCRAMBLE_LIST:
         cube.exe_move(move)
     count = 0
@@ -597,6 +626,9 @@ def parse_solve(scramble, solve):
     return cube
 
 def main():
-    pass
+    SCRAMBLE = "y U2 L' R' U2 F2 L2 R' F2 L D' L2 U2 B2 U F D' U B Fw Uw'"
+    SOLVE = " z' x' U L U' R2 U L' U' R2 D2 R U2 R' D2 R U2 R' D' R D' R' U R D R' U' D R U2 R' S R2 S' R' U2 R' M' U M U2 M U' M' U2 R U' R' S' R U R' S M U M' U' R' U M U' R M' D' l' U' M' U2 M U' l D"
+    cube = parse_solve(SCRAMBLE, SOLVE)
+    print(*cube.solve_stats, sep="\n")
 if __name__ == '__main__':
     main()

@@ -162,19 +162,6 @@ def alg_maker(comm_str):
             return comm_str
     return final
 
-def transposeAndReverseTable(sheet_name):
-    file = openpyxl.load_workbook(r"C:\Users\rotem\PycharmProjects\pythonProject\BLD\ROTO 3bld Algs.xlsx")
-    sheet = file[sheet_name]
-    for i in range (2,23):
-        for j in range(2,i):
-
-            currentAlg = sheet.cell(j,i).value
-            if (currentAlg != None):
-                reverseAlg = reverseAlgCor(currentAlg)
-                sheet.cell(i,j).value = reverseAlg
-                print(currentAlg)
-    file.save(r"C:\Users\rotem\PycharmProjects\pythonProject\BLD\ROTO 3bld Algs.xlsx")
-
 
 def solve_parser(solve):
     solve_split =  solve.split("\r\n")

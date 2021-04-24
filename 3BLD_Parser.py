@@ -619,9 +619,7 @@ def parse_solve(scramble, solve):
             {"count": count, "move": original_move, "ed": solved_edges, "cor": solved_cor, "comment": "",
              "diff": diff, "perm": cube.perm_to_string(cube.current_perm)})
         cube.current_max_perm_list = (cube.current_perm)
-    cube.solve_stats.append(
-        {"count": count,"comment": " //memo%0A"})
-
+    cube.solve_stats[count]["comment"] = " //memo%0A"
     start = count
 
     for i in range (start, len(move_in_solve)):

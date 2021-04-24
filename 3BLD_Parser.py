@@ -95,6 +95,12 @@ class Cube:
                 return False
         return True
 
+    def string_permutation_list(self, a,b):
+        for word in b:
+            if self.string_permutation(word,a):
+                return True
+        return False
+
     def diff_states(self, perm_list):
         return SequenceMatcher(None, self.perm_to_string(self.current_max_perm_list), perm_list).ratio()
 
@@ -398,25 +404,31 @@ class Cube:
         return last_solved_pieces
 
     def parse_comm_list(self, comm):
-
         edges = False
         if len(comm[0]) == 2:
             edges = True
 
         if self.string_permutation(comm[0], comm[1]):
-            print("here - {}, {}".format(comm[0], comm[1]))
             if edges:
+                found = []
+                found.append(comm[0])
                 for temp in self.last_solved_pieces:
                     if temp in self.edges_numbers:
                         sticker = self.dict_stickers[temp]
-                        if self.string_permutation(sticker, comm[0]):
-                            comm_new = [comm[0], sticker, "flip"]
+                        if not self.string_permutation_list(sticker, found):
+                            found.append(sticker)
+                found.append("flip")
+                comm_new = found
             else:
+                found = []
+                found.append(comm[0])
                 for temp in self.last_solved_pieces:
                     if temp in self.corners_numbers:
                         sticker = self.dict_stickers[temp]
-                        if self.string_permutation(sticker, comm[0]):
-                            comm_new = [comm[0], sticker, "twist"]
+                        if not self.string_permutation_list(sticker, found):
+                            found.append(sticker)
+                found.append("twist")
+                comm_new = found
         else:
             comm_new = comm
 
@@ -500,7 +512,7 @@ class Cube:
             # comm[i] = self.dict_lp[self.dict_stickers[comm[i]]]
             comm[i] = self.dict_stickers[comm[i]]
 
-        # comm = self.parse_comm_list(comm)
+        comm = self.parse_comm_list(comm)
         print(comm)
         return comm
 
@@ -699,7 +711,7 @@ def parse_solve(scramble, solve):
 
         # max_solved = solved_edges if
         # if diff > 0.8 or diff < 0.1: #sequence matcher
-        if diff > 0.89 and (count - max_piece_place > 4): #18:
+        if diff > 0.88 and (count - max_piece_place > 4): #18:
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
             comm = cube.parse_solved_to_comm()
@@ -718,11 +730,15 @@ def main():
     SOLVE = pyperclip.paste()
     SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2 x y2"
     SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
-    SCRAMBLE = " L2 F2 D R2 D U F2 L2 U R2 F U R F' D2 B U F2 L' R' F Rw Uw'"
+    SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
+    SCRAMBLE = "M' U2 M U2 M' U' M U2 M' U2 M U"
     cube = parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
 
 #TODO: x y // memo --> comm that starts with rotation
-# add twisted and flips
-# add parity not with buffer
+# done twisted and flips --> even with 3twist and 4 flips
+# add sticker to letter pair option
+# add option to show unparsed algs
+# done parity not with buffer
+# translate from smart cube to solve

@@ -457,20 +457,45 @@ class Cube:
                         flag = True
                         break
 
-        if self.buffer_cor not in self.last_solved_pieces and self.buffer_ed not in self.last_solved_pieces:
-            temp_buffer = next(iter(self.last_solved_pieces))
-            comm.append(temp_buffer)
-            current_num = self.last_solved_pieces[temp_buffer][0]
-            flag = False
-            while not flag:
-                for i in self.last_solved_pieces:
-                    if self.last_solved_pieces[i][1] == current_num:
-                        current_num = self.last_solved_pieces[i][0]
-                        comm.append(i)
-                    if current_num == self.last_solved_pieces[temp_buffer][1]:
-                        flag = True
-                        break
+        if self.buffer_cor not in self.last_solved_pieces:
+            flag_temp_buffer = False
+            for temp in self.last_solved_pieces:
+                if temp in self.corners_numbers:
+                    flag_temp_buffer = True
+                    temp_buffer = temp
+                    break
+            if flag_temp_buffer:
+                comm.append(temp_buffer)
+                current_num = self.last_solved_pieces[temp_buffer][0]
+                flag = False
+                while not flag:
+                    for i in self.last_solved_pieces:
+                        if self.last_solved_pieces[i][1] == current_num:
+                            current_num = self.last_solved_pieces[i][0]
+                            comm.append(i)
+                        if current_num == self.last_solved_pieces[temp_buffer][1]:
+                            flag = True
+                            break
 
+        if self.buffer_ed not in self.last_solved_pieces:
+            flag_temp_buffer = False
+            for temp in self.last_solved_pieces:
+                if temp in self.edges_numbers:
+                    flag_temp_buffer = True
+                    temp_buffer = temp
+                    break
+            if flag_temp_buffer:
+                comm.append(temp_buffer)
+                current_num = self.last_solved_pieces[temp_buffer][0]
+                flag = False
+                while not flag:
+                    for i in self.last_solved_pieces:
+                        if self.last_solved_pieces[i][1] == current_num:
+                            current_num = self.last_solved_pieces[i][0]
+                            comm.append(i)
+                        if current_num == self.last_solved_pieces[temp_buffer][1]:
+                            flag = True
+                            break
         for i in range(len(comm)):
             # comm[i] = self.dict_lp[self.dict_stickers[comm[i]]]
             comm[i] = self.dict_stickers[comm[i]]
@@ -674,7 +699,7 @@ def parse_solve(scramble, solve):
 
         # max_solved = solved_edges if
         # if diff > 0.8 or diff < 0.1: #sequence matcher
-        if diff > 0.88 and (count - max_piece_place > 4): #18:
+        if diff > 0.89 and (count - max_piece_place > 4): #18:
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
             comm = cube.parse_solved_to_comm()
@@ -693,8 +718,7 @@ def main():
     SOLVE = pyperclip.paste()
     SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2 x y2"
     SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
-    SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2"
-    # SOLVE = "M R'"
+    SCRAMBLE = " L2 F2 D R2 D U F2 L2 U R2 F U R F' D2 B U F2 L' R' F Rw Uw'"
     cube = parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()

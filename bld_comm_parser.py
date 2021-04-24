@@ -164,13 +164,17 @@ def alg_maker(comm_str):
 
 
 def solve_parser(solve):
+    replace_chats = ["(", ")"]
+    for ch in replace_chats:
+        solve = solve.replace(ch, "")
+    description_words = ["corners", "edges", "parity"]
     solve_split =  solve.split("\r\n")
     solve = ""
-    print(solve_split)
     for comm in solve_split:
         if comm.find("/") != -1:
-            comm = comm[:comm.find("/")]
-        solve += " " + str(alg_maker(comm))
+                comm = comm[:comm.find("/")]
+        if comm not in description_words:
+            solve += " " + str(alg_maker(comm))
     return solve
 def main():
     pass

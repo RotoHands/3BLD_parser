@@ -2,9 +2,8 @@
 from bld_comm_parser import solve_parser
 import permutation
 import re
-import pyperclip
 from difflib import SequenceMatcher
-
+import pyperclip
 
 def ERROR_FUNC():
     print("unknown move: ")
@@ -37,8 +36,8 @@ class Cube:
         self.max_edges = 12
         self.rotation = ['x', 'x\'', 'x2', 'z', 'z\'', 'z2', 'y', 'y\'', 'y2']
         self.last_solved_pieces = {}
-        self.buffer_ed = self.get_buffer_ed("DF")
-        self.buffer_cor = self.get_buffer_cor("UBL")
+        self.buffer_ed = self.get_buffer_ed("UF")
+        self.buffer_cor = self.get_buffer_cor("UFR")
         self.current_facelet = ""
         self.R = permutation.Permutation(1, 2, 21, 4, 5, 24, 7, 8, 27, 16, 13, 10, 17, 14, 11, 18, 15, 12, 19, 20, 30, 22, 23, 33, 25, 26, 36, 28, 29, 52, 31, 32, 49, 34, 35, 46, 37, 38, 39, 40, 41,42, 43, 44, 45, 9, 47, 48, 6, 50, 51, 3, 53, 54).inverse()
         self.RP = self.R.inverse()
@@ -348,6 +347,18 @@ class Cube:
         funcMoves.get(move)()
 
 
+    def gen_solve_to_text(self):
+        self.url = "scramble: \n"
+        for move in self.scramble.split():
+            self.url += "{} ".format(move)
+        self.url += "\n\nsolve: \n"
+
+        for move in self.solve_stats:
+            if "move" in move:
+                self.url += "{} ".format(move["move"])
+            if move["comment"] != "":
+                self.url += "// {} \n".format(move["comment"])
+        pyperclip.copy(self.url)
 
     def gen_url(self):
         self.url = "https://www.cubedb.net/?rank=3&title={}&scramble=".format("test")
@@ -363,7 +374,7 @@ class Cube:
                     move["move"].replace("\'", "-")
                 self.url += "{}_".format(move["move"])
             if move["comment"] != "":
-                self.url += move["comment"]
+                self.url += "// {} %0A".format(move["comment"])
         pyperclip.copy(self.url)
 
     def perm_to_string(self, perm):
@@ -657,7 +668,7 @@ class Cube:
         if self.solve_stats[-1]["comment"] == "":
             for stat in reversed(self.solve_stats):
                 if stat["comment"] != "":
-                    self.solve_stats[stat["count"]]["comment"] += "// mistake from here%0A"
+                    self.solve_stats[stat["count"]]["comment"] += "mistake from here"
                     break
 def parse_solve(scramble, solve):
     solve = solve_parser(solve)
@@ -696,7 +707,7 @@ def parse_solve(scramble, solve):
              "diff": diff, "perm": cube.perm_to_string(cube.current_perm)})
         cube.current_max_perm_list = (cube.current_perm)
     if flag:
-        cube.solve_stats[count]["comment"] = " //memo%0A"
+        cube.solve_stats[count]["comment"] = "memo"
     start = count
 
     for i in range (start, len(move_in_solve)):
@@ -711,12 +722,13 @@ def parse_solve(scramble, solve):
 
         # max_solved = solved_edges if
         # if diff > 0.8 or diff < 0.1: #sequence matcher
-        if diff > 0.88 and (count - max_piece_place > 4): #18:
+        if diff > 0.89 and (count - max_piece_place >= 4): #18:
+            diff_moves = count - start - max_piece_place
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
             comm = cube.parse_solved_to_comm()
             cube.current_max_perm_list = cube.current_perm
-            cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "//{}%0A".format("_".join(comm[:])),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+            cube.solve_stats.append({"count" : count,"move": original_move,"diff_moves": diff_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "{}   {}/{}".format(" ".join(comm[:]), diff_moves,count - start),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
         else:
             cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 
@@ -727,11 +739,12 @@ def parse_solve(scramble, solve):
 
 def main():
     # SCRAMBLE = "B2 R2 B2 L' F2 U2 B2 D2 R' F' R2 U' B2 R' B2 D2 B' L' D' U Fw' Uw2"
+
     SOLVE = pyperclip.paste()
     SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2 x y2"
     SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
     SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
-    SCRAMBLE = "M' U2 M U2 M' U' M U2 M' U2 M U"
+    SCRAMBLE = "U L B' D' F' B' L B F2 U2 L2 D2 L2 B2 R D2 F2 L' F2 U' Uw"
     cube = parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
@@ -742,3 +755,6 @@ if __name__ == '__main__':
 # add option to show unparsed algs
 # done parity not with buffer
 # translate from smart cube to solve
+# done option to paste to text
+# add count to moves
+# add

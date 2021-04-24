@@ -37,8 +37,8 @@ class Cube:
         self.max_edges = 12
         self.rotation = ['x', 'x\'', 'x2', 'z', 'z\'', 'z2', 'y', 'y\'', 'y2']
         self.last_solved_pieces = {}
-        self.buffer_ed = self.get_buffer_ed("UF")
-        self.buffer_cor = self.get_buffer_cor("UFR")
+        self.buffer_ed = self.get_buffer_ed("DF")
+        self.buffer_cor = self.get_buffer_cor("UBL")
         self.current_facelet = ""
         self.R = permutation.Permutation(1, 2, 21, 4, 5, 24, 7, 8, 27, 16, 13, 10, 17, 14, 11, 18, 15, 12, 19, 20, 30, 22, 23, 33, 25, 26, 36, 28, 29, 52, 31, 32, 49, 34, 35, 46, 37, 38, 39, 40, 41,42, 43, 44, 45, 9, 47, 48, 6, 50, 51, 3, 53, 54).inverse()
         self.RP = self.R.inverse()
@@ -88,6 +88,12 @@ class Cube:
                 split_data = re.findall('"([^"]*)"', line)
                 dict_lp[split_data[0]] = split_data[1]
         return (dict_lp)
+
+    def string_permutation(self, a,b):
+        for c in a:
+            if c not in b:
+                return False
+        return True
 
     def diff_states(self, perm_list):
         return SequenceMatcher(None, self.perm_to_string(self.current_max_perm_list), perm_list).ratio()
@@ -383,21 +389,46 @@ class Cube:
     def diff_solved_state(self):
         last = self.current_max_perm_list
         current = self.current_perm
-        print("last : {}\ncurr : {}\n\n".format(last, current))
         last = self.perm_to_string(last.inverse()).split()
         current = self.perm_to_string(current.inverse()).split()
         last_solved_pieces = {}
         for i in range (0,54):
             if (last[i] != current[i]):
                 last_solved_pieces[i+1] = [last[i], current[i]]
-
         return last_solved_pieces
+
+    def parse_comm_list(self, comm):
+
+        edges = False
+        if len(comm[0]) == 2:
+            edges = True
+
+        if self.string_permutation(comm[0], comm[1]):
+            print("here - {}, {}".format(comm[0], comm[1]))
+            if edges:
+                for temp in self.last_solved_pieces:
+                    if temp in self.edges_numbers:
+                        sticker = self.dict_stickers[temp]
+                        if self.string_permutation(sticker, comm[0]):
+                            comm_new = [comm[0], sticker, "flip"]
+            else:
+                for temp in self.last_solved_pieces:
+                    if temp in self.corners_numbers:
+                        sticker = self.dict_stickers[temp]
+                        if self.string_permutation(sticker, comm[0]):
+                            comm_new = [comm[0], sticker, "twist"]
+        else:
+            comm_new = comm
+        return comm_new
 
     def parse_solved_to_comm(self):
         comm = []
         if self.buffer_ed in self.last_solved_pieces:
-            print("edges")
+            buffer_done = False
+            # for temp_buffer in self.last_solved_pieces:
+            #     if temp_buffer in self.edges_numbers:
             comm.append(self.buffer_ed)
+            # comm.append(temp_buffer)
             current_num = self.last_solved_pieces[self.buffer_ed][0]
             flag = False
             while not flag:
@@ -410,17 +441,17 @@ class Cube:
                         break
 
         if self.buffer_cor in self.last_solved_pieces:
-            print("corners")
+    # for temp_buffer in self.last_solved_pieces:
+    #     if temp_buffer in self.corners_numbers:
             comm.append(self.buffer_cor)
+            #comm.append(temp_buffer)
             current_num = self.last_solved_pieces[self.buffer_cor][0]
             flag = False
             while not flag:
-                print(comm)
                 for i in self.last_solved_pieces:
                     if self.last_solved_pieces[i][1] == current_num:
                         current_num = self.last_solved_pieces[i][0]
                         comm.append(i)
-                    print("current num : {}".format(current_num))
                     if current_num == self.last_solved_pieces[self.buffer_cor][1]:
                         flag = True
                         break
@@ -431,12 +462,10 @@ class Cube:
             current_num = self.last_solved_pieces[temp_buffer][0]
             flag = False
             while not flag:
-                print(comm)
                 for i in self.last_solved_pieces:
                     if self.last_solved_pieces[i][1] == current_num:
                         current_num = self.last_solved_pieces[i][0]
                         comm.append(i)
-                    print("current num : {}".format(current_num))
                     if current_num == self.last_solved_pieces[temp_buffer][1]:
                         flag = True
                         break
@@ -444,6 +473,8 @@ class Cube:
         for i in range(len(comm)):
             # comm[i] = self.dict_lp[self.dict_stickers[comm[i]]]
             comm[i] = self.dict_stickers[comm[i]]
+
+        comm = self.parse_comm_list(comm)
         return comm
 
     def exe_move(self, move):
@@ -476,6 +507,8 @@ class Cube:
         rotations = []
         for move in cube_helper.scramble:
             cube_helper.exe_move(move)
+        str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
+        print(str_perm[22])
         for move in cube_helper.solve:
             if move not in cube_helper.rotation:
                 break
@@ -483,8 +516,11 @@ class Cube:
 
 
         str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
+        print(str_perm)
         up = str_perm[4]
         front = str_perm[22]
+        print(up)
+        print(front)
         flag = False
 
         for i in range (4):
@@ -503,13 +539,13 @@ class Cube:
             str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             up = str_perm[4]
             front = str_perm[22]
-        print(rotations)
-        print(up)
+
         while (up != "5" or front != "23"):
             rotations.append("y")
             cube_helper.exe_move("y")
             str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             front = str_perm[22]
+        print(rotations)
         return rotations
 
     def y_rotation(self):
@@ -610,8 +646,9 @@ def parse_solve(scramble, solve):
     cube.current_max_perm_list = (cube.current_perm)
     move_in_solve = cube.solve.split()
     max_piece_place = 0
-
+    flag = False
     while move_in_solve[count] in cube.rotation:
+        flag = True
         original_move = move_in_solve[count]
         print("herer",original_move)
         exe_move = cube.solve_helper.split()[count]
@@ -624,7 +661,8 @@ def parse_solve(scramble, solve):
             {"count": count, "move": original_move, "ed": solved_edges, "cor": solved_cor, "comment": "",
              "diff": diff, "perm": cube.perm_to_string(cube.current_perm)})
         cube.current_max_perm_list = (cube.current_perm)
-    cube.solve_stats[count]["comment"] = " //memo%0A"
+    if flag:
+        cube.solve_stats[count]["comment"] = " //memo%0A"
     start = count
 
     for i in range (start, len(move_in_solve)):
@@ -653,8 +691,8 @@ def parse_solve(scramble, solve):
     return cube
 
 def main():
-    SCRAMBLE = " D2 L' F' R' B' R B D R' F2 B2 D2 L' F2 D2 L D2 R' Rw2 Uw"
-
+    SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2"
+    # SCRAMBLE = "D2 L' F' R' B' R B D R' F2 B2 D2 L' F2 D2 L D2 R' Rw2 Uw"
     SOLVE = pyperclip.paste()
     cube = parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':

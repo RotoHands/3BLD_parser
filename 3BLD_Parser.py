@@ -770,19 +770,21 @@ def main():
     SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
     SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
     SCRAMBLE = "U' R B2 R B2 R D2 R F2 L' B2 R' F2 U' F2 R2 U' L F' L2 B Fw Uw'"
+    SCRAMBLE = "F2 D B2 D L2 U' F2 L2 U2 R' B' L F R' D' B R B' R' Rw'  "
     cube = parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
 
 #TODO: x y // memo --> comm that starts with rotation
 # done twisted and flips --> even with 3twist and 4 flips
-# add sticker to letter pair option
+# done sticker to letter pair option
 # add option to show unparsed algs
 # done parity not with buffer
-# translate from smart cube to solve
+# add translate from smart cube to solve
 # done option to paste to text
 # done count to moves
-# add (M U M' U')2 like algs to parser
+# add (M U M' U')2 like algs to parser, UD
+# diff moves misses by one from secnd alg
 
 
 # feature:

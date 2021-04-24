@@ -475,30 +475,36 @@ class Cube:
         rotations = []
         for move in cube_helper.scramble:
             cube_helper.exe_move(move)
-        print(cube_helper.perm_to_string(cube_helper.current_perm))
         for move in cube_helper.solve:
             if move not in cube_helper.rotation:
                 break
+            cube_helper.exe_move(move)
+
+
         str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
-        print(str_perm)
         up = str_perm[4]
         front = str_perm[22]
 
 
         for i in range (4):
             if (up == "5"):
+                flag = True
                 break
             rotations.append("x")
             cube_helper.exe_move("x")
+            str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             up = str_perm[4]
+            front = str_perm[22]
 
-
-        if (front != "23"):
+        if (front != "23" and not flag):
             rotations.append("z")
             cube_helper.exe_move("z")
-        while (up != "5" and front != "23"):
+            str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
+            front = str_perm[22]
+        while (up != "5" or front != "23"):
             rotations.append("y")
             cube_helper.exe_move("y")
+            str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             front = str_perm[22]
         return rotations
 

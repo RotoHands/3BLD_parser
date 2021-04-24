@@ -583,9 +583,14 @@ class Cube:
             if move in self.rotation:
                 self.apply_rotation(move)
 
+    def find_mistake(self):
+        if self.solve_stats[-1]["comment"] == "":
+            for stat in reversed(self.solve_stats):
+                if stat["comment"] != "":
+                    self.solve_stats[stat["count"]]["comment"] += "// mistake from here%0A"
+                    break
 def parse_solve(scramble, solve):
     solve = solve_parser(solve)
-
     SOLVED = "0UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
     cube = Cube()
     cube.scramble = scramble
@@ -642,13 +647,14 @@ def parse_solve(scramble, solve):
             cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "//{}%0A".format("_".join(comm[:])),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
         else:
             cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
-    print(*cube.solve_stats, sep="\n")
 
+    cube.find_mistake()
     cube.gen_url()
     return cube
 
 def main():
     SCRAMBLE = " D2 L' F' R' B' R B D R' F2 B2 D2 L' F2 D2 L D2 R' Rw2 Uw"
+
     SOLVE = pyperclip.paste()
     cube = parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':

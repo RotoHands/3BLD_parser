@@ -419,6 +419,7 @@ class Cube:
                             comm_new = [comm[0], sticker, "twist"]
         else:
             comm_new = comm
+
         return comm_new
 
     def parse_solved_to_comm(self):
@@ -474,7 +475,8 @@ class Cube:
             # comm[i] = self.dict_lp[self.dict_stickers[comm[i]]]
             comm[i] = self.dict_stickers[comm[i]]
 
-        comm = self.parse_comm_list(comm)
+        # comm = self.parse_comm_list(comm)
+        print(comm)
         return comm
 
     def exe_move(self, move):
@@ -507,8 +509,6 @@ class Cube:
         rotations = []
         for move in cube_helper.scramble:
             cube_helper.exe_move(move)
-        str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
-        print(str_perm[22])
         for move in cube_helper.solve:
             if move not in cube_helper.rotation:
                 break
@@ -516,11 +516,8 @@ class Cube:
 
 
         str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
-        print(str_perm)
         up = str_perm[4]
         front = str_perm[22]
-        print(up)
-        print(front)
         flag = False
 
         for i in range (4):
@@ -539,13 +536,13 @@ class Cube:
             str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             up = str_perm[4]
             front = str_perm[22]
-
+        print(rotations)
+        print(up)
         while (up != "5" or front != "23"):
             rotations.append("y")
             cube_helper.exe_move("y")
             str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             front = str_perm[22]
-        print(rotations)
         return rotations
 
     def y_rotation(self):
@@ -634,9 +631,9 @@ def parse_solve(scramble, solve):
     cube.solve_helper = solve
     cube.current_facelet = SOLVED
     SCRAMBLE_LIST = scramble.split()
-    print(cube.current_perm)
     rot = cube.fix_rotation()
-    print(rot)
+    print(cube.current_perm)
+    print(cube.solve)
     for move in rot:
          cube.exe_move(move)
     for move in SCRAMBLE_LIST:
@@ -677,7 +674,7 @@ def parse_solve(scramble, solve):
 
         # max_solved = solved_edges if
         # if diff > 0.8 or diff < 0.1: #sequence matcher
-        if diff > 0.89 and (count - max_piece_place > 4): #18:
+        if diff > 0.88 and (count - max_piece_place > 4): #18:
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
             comm = cube.parse_solved_to_comm()
@@ -687,13 +684,21 @@ def parse_solve(scramble, solve):
             cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 
     cube.find_mistake()
+    print(*cube.solve_stats, sep="\n")
     cube.gen_url()
     return cube
 
 def main():
-    SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2"
-    # SCRAMBLE = "D2 L' F' R' B' R B D R' F2 B2 D2 L' F2 D2 L D2 R' Rw2 Uw"
+    # SCRAMBLE = "B2 R2 B2 L' F2 U2 B2 D2 R' F' R2 U' B2 R' B2 D2 B' L' D' U Fw' Uw2"
     SOLVE = pyperclip.paste()
+    SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2 x y2"
+    SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
+    SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2"
+    # SOLVE = "M R'"
     cube = parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
+
+#TODO: x y // memo --> comm that starts with rotation
+# add twisted and flips
+# add parity not with buffer

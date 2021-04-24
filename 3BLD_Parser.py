@@ -346,9 +346,10 @@ class Cube:
         self.url += "&alg="
 
         for move in self.solve_stats:
-            if "\'" in move["move"]:
-                move["move"].replace("\'", "-")
-            self.url += "{}_".format(move["move"])
+            if "move" in move:
+                if "\'" in move["move"]:
+                    move["move"].replace("\'", "-")
+                self.url += "{}_".format(move["move"])
             if move["comment"] != "":
                 self.url += move["comment"]
         pyperclip.copy(self.url)
@@ -484,7 +485,7 @@ class Cube:
         str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
         up = str_perm[4]
         front = str_perm[22]
-
+        flag = False
 
         for i in range (4):
             if (up == "5"):
@@ -500,7 +501,10 @@ class Cube:
             rotations.append("z")
             cube_helper.exe_move("z")
             str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
+            up = str_perm[4]
             front = str_perm[22]
+        print(rotations)
+        print(up)
         while (up != "5" or front != "23"):
             rotations.append("y")
             cube_helper.exe_move("y")
@@ -576,7 +580,7 @@ class Cube:
 
         solve_move_list = self.solve.split()
         for move in solve_move_list:
-            if move in self.rotations:
+            if move in self.rotation:
                 self.apply_rotation(move)
 
 def parse_solve(scramble, solve):
@@ -601,48 +605,53 @@ def parse_solve(scramble, solve):
     cube.current_max_perm_list = (cube.current_perm)
     move_in_solve = cube.solve.split()
     max_piece_place = 0
-    for move in move_in_solve:
-        original_move = move
+
+    while move_in_solve[count] in cube.rotation:
+        original_move = move_in_solve[count]
+        print("herer",original_move)
         exe_move = cube.solve_helper.split()[count]
         count += 1
-        if move in cube.rotation:
-            cube.exe_move(exe_move)
-            # cube.current_max_perm_list = (cube.current_perm)
-            solved_edges =  cube.count_solve_edges()
-            solved_cor = cube.count_solved_cor()
-            diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
-            cube.solve_stats.append(
-                {"count": count, "move": original_move, "ed": solved_edges, "cor": solved_cor, "comment": "",
-                 "diff": diff, "perm": cube.perm_to_string(cube.current_perm)})
+        cube.exe_move(exe_move)
+        solved_edges = cube.count_solve_edges()
+        solved_cor = cube.count_solved_cor()
+        diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
+        cube.solve_stats.append(
+            {"count": count, "move": original_move, "ed": solved_edges, "cor": solved_cor, "comment": "",
+             "diff": diff, "perm": cube.perm_to_string(cube.current_perm)})
+        cube.current_max_perm_list = (cube.current_perm)
+    cube.solve_stats.append(
+        {"count": count,"comment": " //memo%0A"})
 
-            # cube.apply_rotation(exe_move)
-            # revese_rotation = ("{}'".format(exe_move)).replace("''","")
-            # print(revese_rotation)
-            # cube.exe_move(revese_rotation)
-            cube.current_max_perm_list = (cube.current_perm)
+    start = count
+
+    for i in range (start, len(move_in_solve)):
+
+        original_move = move_in_solve[i]
+        exe_move = cube.solve_helper.split()[i]
+        count += 1
+        cube.exe_move(exe_move)
+        solved_edges =  cube.count_solve_edges()
+        solved_cor = cube.count_solved_cor()
+        diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
+
+        # max_solved = solved_edges if
+        # if diff > 0.8 or diff < 0.1: #sequence matcher
+        if diff > 0.89 and (count - max_piece_place > 4): #18:
+            max_piece_place = count
+            cube.last_solved_pieces = cube.diff_solved_state()
+            comm = cube.parse_solved_to_comm()
+            cube.current_max_perm_list = cube.current_perm
+            cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "//{}%0A".format("_".join(comm[:])),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
         else:
-            cube.exe_move(exe_move)
-            solved_edges =  cube.count_solve_edges()
-            solved_cor = cube.count_solved_cor()
-            diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
+            cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+    print(*cube.solve_stats, sep="\n")
 
-            # max_solved = solved_edges if
-            # if diff > 0.8 or diff < 0.1: #sequence matcher
-            if diff > 0.89 and (count - max_piece_place > 4): #18:
-                max_piece_place = count
-                cube.last_solved_pieces = cube.diff_solved_state()
-                comm = cube.parse_solved_to_comm()
-                cube.current_max_perm_list = cube.current_perm
-                cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "//{}%0A".format("_".join(comm[:])),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
-            else:
-                cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
     cube.gen_url()
     return cube
 
 def main():
-    SCRAMBLE = "y U2 L' R' U2 F2 L2 R' F2 L D' L2 U2 B2 U F D' U B Fw Uw'"
-    SOLVE = " z' x' U L U' R2 U L' U' R2 D2 R U2 R' D2 R U2 R' D' R D' R' U R D R' U' D R U2 R' S R2 S' R' U2 R' M' U M U2 M U' M' U2 R U' R' S' R U R' S M U M' U' R' U M U' R M' D' l' U' M' U2 M U' l D"
+    SCRAMBLE = " D2 L' F' R' B' R B D R' F2 B2 D2 L' F2 D2 L D2 R' Rw2 Uw"
+    SOLVE = pyperclip.paste()
     cube = parse_solve(SCRAMBLE, SOLVE)
-    print(*cube.solve_stats, sep="\n")
 if __name__ == '__main__':
     main()

@@ -17,6 +17,7 @@ class Cube:
               46: "B", 47: "B", 48: "B", 49: "B", 50: "B", 51: "B", 52: "B", 53: "B", 54: "B"}
 
         self.dict_stickers = {1: "UBL", 3: "UBR", 7: "UFL", 9: "UFR", 10: "RFU", 12: "RBU", 16: "RFD", 18: "RBD", 19: "FUL", 21: "FUR" , 25: "FDL",27: "FRD", 28: "DFL", 30: "DFR", 34: "DBL", 36: "DBR", 37: "LBU", 39: "LFU", 43: "LDB", 45: "LFD", 46: "BUR", 48: "BUL", 52: "BRD", 54: "BLD", 2: "UB", 4: "UL", 6: "UR", 8: "UF", 11: "RU", 13: "RF", 15: "RB", 17: "RD", 20: "FU", 22: "FL", 24: "FR", 26: "FD", 29: "DF", 31: "DL", 33: "DR", 35: "DB", 38: "LU", 40: "LB", 42: "LF", 44: "LD", 47: "BU", 49: "BR", 51: "BL", 53: "BD" }
+
         self.dict_lp = self.load_letter_pairs_dict()
         self.corners_numbers = [1, 3, 7, 9, 10, 12, 16, 18, 19, 21, 25, 27, 28, 30, 34, 36, 37, 39, 43, 45, 46, 48, 52, 54]
         self.edges_numbers = [2, 4, 6, 8, 11, 13, 15, 17, 20, 22, 24, 26, 29, 31, 33, 35, 38, 40, 42, 44, 47, 49, 51, 53]
@@ -26,10 +27,12 @@ class Cube:
         self.solved_perm = permutation.Permutation(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,54)
         self.solve_stats = []
         self.current_perm = self.solved_perm
+        self.gen_url_bool = True
         self.scramble = ""
         self.solve = ""
         self.solve_helper = ""
         self.url = ""
+        self.parse_to_lp = True
         self.current_max_perm_list = None
         self.current_max_perm = None
         self.parity = None
@@ -102,8 +105,6 @@ class Cube:
 
     def diff_states(self, perm_list):
         return SequenceMatcher(None, self.perm_to_string(self.current_max_perm_list), perm_list).ratio()
-
-        #return jellyfish.levenshtein_distance(self.current_max_perm_list, perm_list)
 
 
 
@@ -389,8 +390,6 @@ class Cube:
         for cor in self.corners_numbers:
             if current_perm_list[cor - 1] == str(cor):
                 solved_corners += 1
-
-
         return int(solved_corners/3)
 
     def count_solve_edges(self):
@@ -399,8 +398,6 @@ class Cube:
         for edge in self.edges_numbers:
             if current_perm_list[edge - 1] == str(edge):
                 solved_edges += 1
-
-
         return int(solved_edges/2)
 
     def diff_solved_state(self):
@@ -428,7 +425,7 @@ class Cube:
                         sticker = self.dict_stickers[temp]
                         if not self.string_permutation_list(sticker, found):
                             found.append(sticker)
-                found.append("flip")
+                found.append(" flip")
                 comm_new = found
             else:
                 found = []
@@ -438,21 +435,19 @@ class Cube:
                         sticker = self.dict_stickers[temp]
                         if not self.string_permutation_list(sticker, found):
                             found.append(sticker)
-                found.append("twist")
+                found.append(" twist")
                 comm_new = found
         else:
             comm_new = comm
-
         return comm_new
 
     def parse_solved_to_comm(self):
         comm = []
+        piece_type = {"edge" : False, "corner": False, "parity" : False}
         if self.buffer_ed in self.last_solved_pieces:
-            buffer_done = False
-            # for temp_buffer in self.last_solved_pieces:
-            #     if temp_buffer in self.edges_numbers:
+            print("here")
+            piece_type["edge"] = True
             comm.append(self.buffer_ed)
-            # comm.append(temp_buffer)
             current_num = self.last_solved_pieces[self.buffer_ed][0]
             flag = False
             while not flag:
@@ -465,10 +460,9 @@ class Cube:
                         break
 
         if self.buffer_cor in self.last_solved_pieces:
-    # for temp_buffer in self.last_solved_pieces:
-    #     if temp_buffer in self.corners_numbers:
+            print("here cor")
+            piece_type["corner"] = True
             comm.append(self.buffer_cor)
-            #comm.append(temp_buffer)
             current_num = self.last_solved_pieces[self.buffer_cor][0]
             flag = False
             while not flag:
@@ -481,9 +475,11 @@ class Cube:
                         break
 
         if self.buffer_cor not in self.last_solved_pieces:
+
             flag_temp_buffer = False
             for temp in self.last_solved_pieces:
                 if temp in self.corners_numbers:
+                    piece_type["corner"] = True
                     flag_temp_buffer = True
                     temp_buffer = temp
                     break
@@ -504,6 +500,7 @@ class Cube:
             flag_temp_buffer = False
             for temp in self.last_solved_pieces:
                 if temp in self.edges_numbers:
+                    piece_type["edge"] = True
                     flag_temp_buffer = True
                     temp_buffer = temp
                     break
@@ -519,13 +516,24 @@ class Cube:
                         if current_num == self.last_solved_pieces[temp_buffer][1]:
                             flag = True
                             break
-        for i in range(len(comm)):
-            # comm[i] = self.dict_lp[self.dict_stickers[comm[i]]]
-            comm[i] = self.dict_stickers[comm[i]]
+        if piece_type["edge"] and piece_type["corner"]:
+            piece_type["parity"] = True
+            piece_type["edge"] = False
+            piece_type["corner"] = False
 
+        for i in range(len(comm)):
+            comm[i] = self.dict_stickers[comm[i]]
         comm = self.parse_comm_list(comm)
-        print(comm)
-        return comm
+
+        print("comm : {}".format(comm))
+        for i in range(len(comm)):
+            if self.parse_to_lp:
+                if (' twist' != comm[i]) and (' flip' != comm[i]):
+                    comm[i] = self.dict_lp[comm[i]]
+
+
+
+        return (comm, piece_type)
 
     def exe_move(self, move):
         self.singlemoveExecute(move)
@@ -584,8 +592,7 @@ class Cube:
             str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             up = str_perm[4]
             front = str_perm[22]
-        print(rotations)
-        print(up)
+
         while (up != "5" or front != "23"):
             rotations.append("y")
             cube_helper.exe_move("y")
@@ -680,8 +687,7 @@ def parse_solve(scramble, solve):
     cube.current_facelet = SOLVED
     SCRAMBLE_LIST = scramble.split()
     rot = cube.fix_rotation()
-    print(cube.current_perm)
-    print(cube.solve)
+
     for move in rot:
          cube.exe_move(move)
     for move in SCRAMBLE_LIST:
@@ -695,7 +701,6 @@ def parse_solve(scramble, solve):
     while move_in_solve[count] in cube.rotation:
         flag = True
         original_move = move_in_solve[count]
-        print("herer",original_move)
         exe_move = cube.solve_helper.split()[count]
         count += 1
         cube.exe_move(exe_move)
@@ -720,31 +725,51 @@ def parse_solve(scramble, solve):
         solved_cor = cube.count_solved_cor()
         diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
 
-        # max_solved = solved_edges if
-        # if diff > 0.8 or diff < 0.1: #sequence matcher
-        if diff > 0.89 and (count - max_piece_place >= 4): #18:
+        if diff > 0.89 and (count - max_piece_place >= 4):
             diff_moves = count - start - max_piece_place
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
-            comm = cube.parse_solved_to_comm()
+            comm, piece_type = cube.parse_solved_to_comm()
             cube.current_max_perm_list = cube.current_perm
-            cube.solve_stats.append({"count" : count,"move": original_move,"diff_moves": diff_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "{}   {}/{}".format(" ".join(comm[:]), diff_moves,count - start),  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+            if cube.parse_to_lp:
+                buffer_lp_edge = cube.dict_lp[cube.dict_stickers[cube.buffer_ed]]
+                buffer_lp_cor = cube.dict_lp[cube.dict_stickers[cube.buffer_cor]]
+                if piece_type["edge"]:
+                    if buffer_lp_edge in comm and " flip" not in comm:
+                        comment = "".join(comm[1:])
+                    else:
+                        comment = "".join(comm)
+                elif piece_type["corner"]:
+                    if buffer_lp_cor in comm and " twist" not in comm:
+                        comment = "".join(comm[1:])
+                    else:
+                        comment = "".join(comm)
+                else:
+                    comment = "{} {}".format("".join(comm[:2]), "".join(comm[2:]) )
+
+                comment = "{}   {}/{}".format(comment, diff_moves,count - start)
+
+            else:
+                comment = "{}   {}/{}".format(" ".join(comm[:]), diff_moves,count - start)
+            cube.solve_stats.append({"count" : count,"move": original_move,"diff_moves": diff_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : comment,  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
         else:
             cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 
     cube.find_mistake()
     print(*cube.solve_stats, sep="\n")
-    cube.gen_url()
+    if cube.gen_url_bool:
+        cube.gen_url()
+    else:
+        cube.gen_solve_to_text()
     return cube
 
 def main():
-    # SCRAMBLE = "B2 R2 B2 L' F2 U2 B2 D2 R' F' R2 U' B2 R' B2 D2 B' L' D' U Fw' Uw2"
 
     SOLVE = pyperclip.paste()
     SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2 x y2"
     SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
     SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
-    SCRAMBLE = "U L B' D' F' B' L B F2 U2 L2 D2 L2 B2 R D2 F2 L' F2 U' Uw"
+    SCRAMBLE = "U' R B2 R B2 R D2 R F2 L' B2 R' F2 U' F2 R2 U' L F' L2 B Fw Uw'"
     cube = parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
@@ -756,5 +781,9 @@ if __name__ == '__main__':
 # done parity not with buffer
 # translate from smart cube to solve
 # done option to paste to text
-# add count to moves
-# add
+# done count to moves
+# add (M U M' U')2 like algs to parser
+
+
+# feature:
+# supports all oreintations' all buffers' 2twist,3twist, 2flip 4 flip

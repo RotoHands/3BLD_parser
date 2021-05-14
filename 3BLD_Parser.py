@@ -27,7 +27,9 @@ class Cube:
         self.solved_perm = permutation.Permutation(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,54)
         self.solve_stats = []
         self.current_perm = self.solved_perm
-        self.gen_url_bool = True
+        self.gen_url_bool = False
+        self.comms_unparsed_bool = False
+        self.comms_unparsed = []
         self.scramble = ""
         self.solve = ""
         self.solve_helper = ""
@@ -349,16 +351,23 @@ class Cube:
 
 
     def gen_solve_to_text(self):
+        count = 0
         self.url = "scramble: \n"
         for move in self.scramble.split():
             self.url += "{} ".format(move)
         self.url += "\n\nsolve: \n"
 
         for move in self.solve_stats:
-            if "move" in move:
-                self.url += "{} ".format(move["move"])
-            if move["comment"] != "":
-                self.url += "// {} \n".format(move["comment"])
+            if self.comms_unparsed_bool:
+                if move["comment"] != "":
+                    self.url += self.comms_unparsed[count]
+                    count += 1
+                    self.url += "// {} \n".format(move["comment"])
+            else:
+                if "move" in move:
+                    self.url += "{} ".format(move["move"])
+                if move["comment"] != "":
+                    self.url += "// {} \n".format(move["comment"])
         pyperclip.copy(self.url)
 
     def gen_url(self):
@@ -368,14 +377,20 @@ class Cube:
                 move.replace("\'", "-")
             self.url += "{}_".format(move)
         self.url += "&alg="
-
+        count = 0
         for move in self.solve_stats:
-            if "move" in move:
-                if "\'" in move["move"]:
-                    move["move"].replace("\'", "-")
-                self.url += "{}_".format(move["move"])
-            if move["comment"] != "":
-                self.url += "// {} %0A".format(move["comment"])
+            if self.comms_unparsed_bool:
+                if move["comment"] != "":
+                    self.url += self.comms_unparsed[count]
+                    count += 1
+                    self.url += "// {} %0A".format(move["comment"])
+            else:
+                if "move" in move:
+                    if "\'" in move["move"]:
+                        move["move"].replace("\'", "-")
+                    self.url += "{}_".format(move["move"])
+                if move["comment"] != "":
+                    self.url += "// {} %0A".format(move["comment"])
         pyperclip.copy(self.url)
 
     def perm_to_string(self, perm):
@@ -677,10 +692,24 @@ class Cube:
                 if stat["comment"] != "":
                     self.solve_stats[stat["count"]]["comment"] += "mistake from here"
                     break
-def parse_solve(scramble, solve):
-    solve = solve_parser(solve)
+def keep_comms_unparsed(solve):
+
+    description_words = ["corners", "edges", "parity", ""]
+    solve_split =  solve.split("\r\n")
+    comms = []
+    for comm in solve_split:
+        if comm.find("/") != -1:
+                comm = comm[:comm.find("/")]
+        if comm not in description_words:
+            comms.append(comm)
+    print("here")
+    print(comms)
+    return comms
+def parse_solve(scramble, solve_attampt):
+    solve = solve_parser(solve_attampt)
     SOLVED = "0UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
     cube = Cube()
+    cube.comms_unparsed = keep_comms_unparsed(solve_attampt)
     cube.scramble = scramble
     cube.solve = solve
     cube.solve_helper = solve
@@ -771,7 +800,7 @@ def main():
     SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
     SCRAMBLE = "U' R B2 R B2 R D2 R F2 L' B2 R' F2 U' F2 R2 U' L F' L2 B Fw Uw'"
     SCRAMBLE = "z2 y U2 B' R2 D2 F2 R2 B D2 F2 U B2 L B F' U' F D' B2 D' Rw2 Uw2"
-    SCRAMBLE = " F2 D U L D' B2 F D2 L D R D' B' U' B2 R2 F' D2"
+    SCRAMBLE = "x' y F2 D' F2 L2 U2 B2 U2 F2 L2 U' R2 F D2 B2 L' R B' D B2 F L Rw Uw2 "
     parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
@@ -779,12 +808,12 @@ if __name__ == '__main__':
 #TODO: x y // memo --> comm that starts with rotation
 # done twisted and flips --> even with 3twist and 4 flips
 # done sticker to letter pair option
-# add option to show unparsed algs
+# done option to show unparsed algs
 # done parity not with buffer
 # add translate from smart cube to solve
 # done option to paste to text
 # done count to moves
-# add (M U M' U')2 like algs to parser
+# done (M U M' U')2 like algs to parser
 # done fix UD algs
 # diff moves misses by one from secnd alg
 

@@ -770,7 +770,8 @@ def main():
     SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
     SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
     SCRAMBLE = "U' R B2 R B2 R D2 R F2 L' B2 R' F2 U' F2 R2 U' L F' L2 B Fw Uw'"
-    SCRAMBLE = "L U' B L U2 F2 U R' F R2 F' R2 D2 L2 F' R2 F B U2 D Rw' Uw'"
+    SCRAMBLE = "z2 y U2 B' R2 D2 F2 R2 B D2 F2 U B2 L B F' U' F D' B2 D' Rw2 Uw2"
+    SCRAMBLE = " F2 D U L D' B2 F D2 L D R D' B' U' B2 R2 F' D2"
     parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
@@ -783,7 +784,8 @@ if __name__ == '__main__':
 # add translate from smart cube to solve
 # done option to paste to text
 # done count to moves
-# add (M U M' U')2 like algs to parser, UD
+# add (M U M' U')2 like algs to parser
+# done fix UD algs
 # diff moves misses by one from secnd alg
 
 

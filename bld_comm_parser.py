@@ -22,6 +22,31 @@ def fix_UD(alg):
     return fixed_alg
 
 
+
+def parse_with_2_algs(alg):
+    if ")2" in alg:
+        rep = 2
+        index = alg.find(")2")
+        repet = alg[alg.find("(") + 1: alg.find(")2")]
+    elif ")3" in alg :
+        rep = 3
+        index = alg.find(")3")
+        repet = alg[alg.find("(") + 1: alg.find(")3")]
+
+    elif ")4" in alg :
+        rep = 4
+        index = alg.find(")4")
+        repet = alg[alg.find("(") + 1: alg.find(")4")]
+    else:
+        return alg
+    temp = []
+    for i in range(rep):
+        temp.append(repet)
+    repet = " ".join(temp)
+    final_alg = alg[:alg.find("(")] + repet + alg[index + 2 :]
+    final_alg = final_alg.replace(":", ",")
+    return final_alg
+
 def removeSlesh(alg):
     if (alg[0] == '[' and alg[len(alg) - 1] == ']' and alg.count("[" )> 1):
         tempAlg = alg[:-1]
@@ -78,7 +103,6 @@ def makeAlg(All, nested = False):
         alg = A + B + Arev
     else:
         alg = C + A + B + Arev +  Brev + Crev
-
     return alg
 
 def extendAlg(currentAlg):
@@ -152,7 +176,13 @@ def cancelAlg(alg):
 
 def alg_maker(comm_str):
     final = ""
-    clip = fix_UD(comm_str)
+    parse = parse_with_2_algs(comm_str)
+    parse = parse_with_2_algs(parse)
+    parse = parse_with_2_algs(parse)
+    clip = fix_UD(parse)
+    replace_chars = ["(", ")"]
+    for ch in replace_chars:
+        clip = clip.replace(ch, "")
     if (clip.find('w') != -1):
         wide_move = clip[clip.index('w')-1]
         alg = clip.replace(wide_move + 'w', wide_move.lower())
@@ -180,13 +210,13 @@ def alg_maker(comm_str):
             final = final.replace("  ", " ")
             final = final.strip()
         else:
-            return comm_str
+            print(clip)
+            return clip
+    print(final)
     return final
 
 def solve_parser(solve):
-    replace_chats = ["(", ")"]
-    for ch in replace_chats:
-        solve = solve.replace(ch, "")
+
     description_words = ["corners", "edges", "parity"]
     solve_split =  solve.split("\r\n")
     solve = ""

@@ -27,8 +27,9 @@ class Cube:
         self.solved_perm = permutation.Permutation(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,54)
         self.solve_stats = []
         self.current_perm = self.solved_perm
-        self.gen_url_bool = False
-        self.comms_unparsed_bool = False
+        self.flag_piece_type = ""
+        self.gen_url_bool = True
+        self.comms_unparsed_bool = True
         self.comms_unparsed = []
         self.scramble = ""
         self.solve = ""
@@ -85,7 +86,7 @@ class Cube:
                 if self.dict_stickers[i] == ed_name:
                     return i
     def load_letter_pairs_dict(self):
-        with open("sticker_letter_pairs.txt" ,"r", encoding="utf-8") as f:
+        with open("sticker_HEB.txt" ,"r", encoding="utf-8") as f:
             dict_lp = {}
             file = f.readlines()
             for line in file:
@@ -360,6 +361,8 @@ class Cube:
         for move in self.solve_stats:
             if self.comms_unparsed_bool:
                 if move["comment"] != "":
+                    move["comment"] = move["comment"].replace("#", "\n")
+
                     self.url += self.comms_unparsed[count]
                     count += 1
                     self.url += "// {} \n".format(move["comment"])
@@ -367,6 +370,7 @@ class Cube:
                 if "move" in move:
                     self.url += "{} ".format(move["move"])
                 if move["comment"] != "":
+                    move["comment"] = move["comment"].replace("#", "\n")
                     self.url += "// {} \n".format(move["comment"])
         pyperclip.copy(self.url)
 
@@ -380,17 +384,41 @@ class Cube:
         count = 0
         for move in self.solve_stats:
             if self.comms_unparsed_bool:
-                if move["comment"] != "":
-                    self.url += self.comms_unparsed[count]
-                    count += 1
-                    self.url += "// {} %0A".format(move["comment"])
+                if self.comms_unparsed_bool:
+                    if move["comment"] != "":
+                        if "#" in move["comment"]:
+                            piece = move["comment"].split("#")[0]
+                            move["comment"] = move["comment"].split("#")[1]
+                            if self.url.rfind("%0A") != -1:
+                                alg = self.url[self.url.rfind("%0A") + 3:]
+                                self.url = self.url[:self.url.rfind("%0A") + 3] + "%0A//{}%0A".format(piece) + alg
+                            else:
+                                alg = self.url[self.url.rfind("=") + 1:]
+                                self.url = self.url[:self.url.rfind("=") + 1] + "%0A//{}%0A".format(piece) + alg
+                        self.url += self.comms_unparsed[count]
+                        count += 1
+                        self.url += "// {} %0A".format(move["comment"])
+
+
             else:
                 if "move" in move:
                     if "\'" in move["move"]:
                         move["move"].replace("\'", "-")
                     self.url += "{}_".format(move["move"])
                 if move["comment"] != "":
-                    self.url += "// {} %0A".format(move["comment"])
+                    if "#" in move["comment"]:
+                        piece = move["comment"].split("#")[0]
+                        move["comment"] = move["comment"].split("#")[1]
+                        if self.url.rfind("%0A") != -1:
+                            alg = self.url[self.url.rfind("%0A") + 3:]
+                            self.url = self.url[:self.url.rfind("%0A") + 3] + "//{}%0A".format(piece) + alg
+                        else:
+                            alg = self.url[self.url.rfind("=") + 1:]
+                            self.url = self.url[:self.url.rfind("=") + 1] + "//{}%0A".format(piece) + alg
+
+                        self.url += "// {} %0A".format(move["comment"])
+                    else:
+                        self.url += "// {} %0A".format(move["comment"])
         pyperclip.copy(self.url)
 
     def perm_to_string(self, perm):
@@ -753,12 +781,20 @@ def parse_solve(scramble, solve_attampt):
         solved_edges =  cube.count_solve_edges()
         solved_cor = cube.count_solved_cor()
         diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
-
+        flag_first_alg = True
+        flag_first_piece = None
+        flag_change_piece = False
         if diff > 0.888 and (count - max_piece_place >= 4):
             diff_moves = count - start - max_piece_place
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
             comm, piece_type = cube.parse_solved_to_comm()
+            if piece_type["edge"]:
+                piece = "edges"
+            elif piece_type["corner"]:
+                piece = "corners"
+            else:
+                piece = "parity"
             cube.current_max_perm_list = cube.current_perm
             if cube.parse_to_lp:
                 buffer_lp_edge = cube.dict_lp[cube.dict_stickers[cube.buffer_ed]]
@@ -775,14 +811,17 @@ def parse_solve(scramble, solve_attampt):
                         comment = "".join(comm)
                 else:
                     comment = "{} {}".format("".join(comm[:2]), "".join(comm[2:]) )
-
                 comment = "{}   {}/{}".format(comment, diff_moves,count - start)
 
             else:
-                comment = "{}   {}/{}".format(" ".join(comm[:]), diff_moves,count - start)
-            cube.solve_stats.append({"count" : count,"move": original_move,"diff_moves": diff_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : comment,  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+                comment = "{}  {}/{}".format(" ".join(comm[:]), diff_moves,count - start)
+
+            if piece != cube.flag_piece_type:
+                comment = "{}#{}".format(piece, comment)
+                cube.flag_piece_type = piece
+            cube.solve_stats.append({"count" : count,"move": original_move,"piece" : piece, "diff_moves": diff_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : comment,  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
         else:
-            cube.solve_stats.append({"count" : count,"move": original_move, "ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+            cube.solve_stats.append({"count" : count,"move": original_move,"ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 
     cube.find_mistake()
     print(*cube.solve_stats, sep="\n")
@@ -795,12 +834,22 @@ def parse_solve(scramble, solve_attampt):
 def main():
 
     SOLVE = pyperclip.paste()
+
+
     SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2 x y2"
     SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
     SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
     SCRAMBLE = "U' R B2 R B2 R D2 R F2 L' B2 R' F2 U' F2 R2 U' L F' L2 B Fw Uw'"
     SCRAMBLE = "z2 y U2 B' R2 D2 F2 R2 B D2 F2 U B2 L B F' U' F D' B2 D' Rw2 Uw2"
-    SCRAMBLE = "x' y F2 D' F2 L2 U2 B2 U2 F2 L2 U' R2 F D2 B2 L' R B' D B2 F L Rw Uw2 "
+    SCRAMBLE = "R U2 D L' U L' F B R2 U D' R2 U' B2 U F2 B'"
+    SCRAMBLE = "x' y F2 D' F2 L2 U2 B2 U2 F2 L2 U' R2 F D2 B2 L' R B' D B2 F L Rw Uw2"
+    """""
+    with open("example_smart.txt", "r") as f:
+        data = f.readlines()
+        print(data)
+        SCRAMBLE = data[0]
+        SOLVE = data[1]
+    """""
     parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
@@ -816,6 +865,7 @@ if __name__ == '__main__':
 # done (M U M' U')2 like algs to parser
 # done fix UD algs
 # diff moves misses by one from secnd alg
+# add corners/edges seperation
 
 
 # feature:

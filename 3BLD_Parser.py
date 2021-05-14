@@ -725,7 +725,7 @@ def parse_solve(scramble, solve):
         solved_cor = cube.count_solved_cor()
         diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
 
-        if diff > 0.89 and (count - max_piece_place >= 4):
+        if diff > 0.888 and (count - max_piece_place >= 4):
             diff_moves = count - start - max_piece_place
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
@@ -770,8 +770,8 @@ def main():
     SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
     SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
     SCRAMBLE = "U' R B2 R B2 R D2 R F2 L' B2 R' F2 U' F2 R2 U' L F' L2 B Fw Uw'"
-    SCRAMBLE = "F2 D B2 D L2 U' F2 L2 U2 R' B' L F R' D' B R B' R' Rw'  "
-    cube = parse_solve(SCRAMBLE, SOLVE)
+    SCRAMBLE = "L U' B L U2 F2 U R' F R2 F' R2 D2 L2 F' R2 F B U2 D Rw' Uw'"
+    parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
 

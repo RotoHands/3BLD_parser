@@ -2,6 +2,26 @@ import time
 import keyboard
 import pyperclip
 import openpyxl
+
+def fix_UD(alg):
+    split_alg = alg.split()
+    fixed_alg = ""
+    for sp in split_alg:
+        if 'U' in sp and 'D' in sp:
+            D_index = sp.find('D')
+            U_index = sp.find('U')
+            if U_index > D_index:
+                fixed_alg += sp[:U_index] + " "
+                fixed_alg += sp[U_index:] + " "
+            else:
+                fixed_alg += sp[:D_index] + " "
+                fixed_alg += sp[D_index:] + " "
+
+        else:
+            fixed_alg += sp + " "
+    return fixed_alg
+
+
 def removeSlesh(alg):
     if (alg[0] == '[' and alg[len(alg) - 1] == ']' and alg.count("[" )> 1):
         tempAlg = alg[:-1]
@@ -129,9 +149,10 @@ def cancelAlg(alg):
             final_alg.append(move)
     return final_alg
 
+
 def alg_maker(comm_str):
     final = ""
-    clip = comm_str
+    clip = fix_UD(comm_str)
     if (clip.find('w') != -1):
         wide_move = clip[clip.index('w')-1]
         alg = clip.replace(wide_move + 'w', wide_move.lower())
@@ -161,7 +182,6 @@ def alg_maker(comm_str):
         else:
             return comm_str
     return final
-
 
 def solve_parser(solve):
     replace_chats = ["(", ")"]

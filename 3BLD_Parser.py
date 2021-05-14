@@ -28,7 +28,7 @@ class Cube:
         self.solve_stats = []
         self.current_perm = self.solved_perm
         self.flag_piece_type = ""
-        self.gen_url_bool = True
+        self.gen_url_bool = False
         self.comms_unparsed_bool = True
         self.comms_unparsed = []
         self.scramble = ""
@@ -356,22 +356,35 @@ class Cube:
         self.url = "scramble: \n"
         for move in self.scramble.split():
             self.url += "{} ".format(move)
-        self.url += "\n\nsolve: \n"
+        self.url += "\n\nsolve:\n"
 
         for move in self.solve_stats:
             if self.comms_unparsed_bool:
                 if move["comment"] != "":
-                    move["comment"] = move["comment"].replace("#", "\n")
-
+                    if "#" in move["comment"]:
+                        piece = move["comment"].split("#")[0]
+                        move["comment"] = move["comment"].split("#")[1]
+                        if self.url.rfind("\n") != -1:
+                            alg = self.url[self.url.rfind("\n") + 1:]
+                            self.url = self.url[:self.url.rfind("\n") + 1] + "\n//{}\n".format(piece) + alg
                     self.url += self.comms_unparsed[count]
                     count += 1
                     self.url += "// {} \n".format(move["comment"])
             else:
                 if "move" in move:
-                    self.url += "{} ".format(move["move"])
+                    if move["move"] != "":
+                        self.url += "{} ".format(move["move"])
                 if move["comment"] != "":
-                    move["comment"] = move["comment"].replace("#", "\n")
-                    self.url += "// {} \n".format(move["comment"])
+                    if "#" in move["comment"]:
+                        piece = move["comment"].split("#")[0]
+                        move["comment"] = move["comment"].split("#")[1]
+                        if self.url.rfind("\n") != -1:
+                            alg = self.url[self.url.rfind("\n") + 1:]
+                            self.url = self.url[:self.url.rfind("\n") + 1] + "//{}\n".format(piece) + alg
+
+                        self.url += "// {} \n".format(move["comment"])
+                    else:
+                        self.url += "// {} \n".format(move["comment"])
         pyperclip.copy(self.url)
 
     def gen_url(self):
@@ -402,9 +415,10 @@ class Cube:
 
             else:
                 if "move" in move:
-                    if "\'" in move["move"]:
-                        move["move"].replace("\'", "-")
-                    self.url += "{}_".format(move["move"])
+                    if move["move"] != "":
+                        if "\'" in move["move"]:
+                            move["move"].replace("\'", "-")
+                        self.url += "{}_".format(move["move"])
                 if move["comment"] != "":
                     if "#" in move["comment"]:
                         piece = move["comment"].split("#")[0]
@@ -773,7 +787,6 @@ def parse_solve(scramble, solve_attampt):
     start = count
 
     for i in range (start, len(move_in_solve)):
-
         original_move = move_in_solve[i]
         exe_move = cube.solve_helper.split()[i]
         count += 1

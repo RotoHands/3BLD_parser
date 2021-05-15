@@ -358,15 +358,25 @@ class Cube:
 
         if m1 == "U'" and m2 == "D":
             return "E' y'"
-
         if m1 == "U" and m2 == "D'":
             return "E y"
+
+        if m1 == "R" and m2 == "L'":
+            return "M x"
+        if m1 == "R'" and m2 == "L":
+            return "M' x'"
+
+        if m1 == "F" and m2 == "B'":
+            return "S' z"
+        if m1 == "F'" and m2 == "B":
+            return "S z'"
 
         return None
     def parse_alg_to_slice_moves(self):
         temp_cube = Cube()
         alg = "U' D R' U D' F2 U' D R' U D'"
         alg = "U' R U' D B' U' B U D' R' U U"
+        alg = "R L' F2 R' L D2"
         alg_list = alg.split()
         rev_alg = reverse_alg(alg)
         final_alg = []
@@ -392,10 +402,11 @@ class Cube:
                     temp_cube.apply_rotation(final_alg[0])
                     final_alg.pop(0)
                     final_alg = temp_cube.solve_helper.split()
-
+                else:
+                    final_alg.pop(0)
             else:
                 alg_apply_rot.append(final_alg.pop(0))
-
+        print(" ".join(alg_apply_rot))
 
 
     def gen_solve_to_text(self):

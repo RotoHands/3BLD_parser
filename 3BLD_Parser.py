@@ -856,13 +856,13 @@ def main():
     SCRAMBLE = "z2 y U2 B' R2 D2 F2 R2 B D2 F2 U B2 L B F' U' F D' B2 D' Rw2 Uw2"
     SCRAMBLE = "R U2 D L' U L' F B R2 U D' R2 U' B2 U F2 B'"
     SCRAMBLE = "x' y F2 D' F2 L2 U2 B2 U2 F2 L2 U' R2 F D2 B2 L' R B' D B2 F L Rw Uw2"
-    """""
+
     with open("example_smart.txt", "r") as f:
         data = f.readlines()
         print(data)
         SCRAMBLE = data[0]
         SOLVE = data[1]
-    """""
+
     parse_solve(SCRAMBLE, SOLVE)
 if __name__ == '__main__':
     main()
@@ -878,7 +878,7 @@ if __name__ == '__main__':
 # done (M U M' U')2 like algs to parser
 # done fix UD algs
 # diff moves misses by one from secnd alg
-# add corners/edges seperation
+# done corners/edges seperation
 
 
 # feature:

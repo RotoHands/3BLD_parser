@@ -138,7 +138,7 @@ def cancel (f,s):
     if(sum == -1 or sum == 3):
         return f[0] + "\'"
 
-def reverseAlgCor(alg):
+def reverse_alg(alg):
     reversealg =""
     algsplit = alg.split()
     algsplit.reverse()

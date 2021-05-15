@@ -1,5 +1,6 @@
 
 from bld_comm_parser import solve_parser
+from bld_comm_parser import reverse_alg
 import permutation
 import re
 from difflib import SequenceMatcher
@@ -28,8 +29,8 @@ class Cube:
         self.solve_stats = []
         self.current_perm = self.solved_perm
         self.flag_piece_type = ""
-        self.gen_url_bool = False
-        self.comms_unparsed_bool = True
+        self.gen_url_bool = True
+        self.comms_unparsed_bool = False
         self.comms_unparsed = []
         self.scramble = ""
         self.solve = ""
@@ -349,6 +350,52 @@ class Cube:
 
     }
         funcMoves.get(move)()
+
+    def check_slice(self, m1, m2):
+        """
+        gets two moves, returns the equivelent slice and rotation move or None
+        """
+
+        if m1 == "U'" and m2 == "D":
+            return "E' y'"
+
+        if m1 == "U" and m2 == "D'":
+            return "E y"
+
+        return None
+    def parse_alg_to_slice_moves(self):
+        temp_cube = Cube()
+        alg = "U' D R' U D' F2 U' D R' U D'"
+        alg = "U' R U' D B' U' B U D' R' U U"
+        alg_list = alg.split()
+        rev_alg = reverse_alg(alg)
+        final_alg = []
+        flag = False
+        temp_cube.solve_helper = alg
+        while alg_list:
+            slice_move = None
+            if len(alg_list) > 1:
+                slice_move = temp_cube.check_slice(alg_list[0], alg_list[1])
+            if slice_move:
+                for m in slice_move.split():
+                    final_alg.append(m)
+                    alg_list.pop(0)
+            else:
+                final_alg.append(alg_list[0])
+                alg_list.pop(0)
+        alg_apply_rot = []
+
+        while final_alg:
+            if final_alg[0] in temp_cube.rotation:
+                if len(final_alg) > 1:
+                    temp_cube.solve_helper = " ".join(final_alg[1:])
+                    temp_cube.apply_rotation(final_alg[0])
+                    final_alg.pop(0)
+                    final_alg = temp_cube.solve_helper.split()
+
+            else:
+                alg_apply_rot.append(final_alg.pop(0))
+
 
 
     def gen_solve_to_text(self):
@@ -859,11 +906,11 @@ def main():
 
     with open("example_smart.txt", "r") as f:
         data = f.readlines()
-        print(data)
         SCRAMBLE = data[0]
         SOLVE = data[1]
-
-    parse_solve(SCRAMBLE, SOLVE)
+    c = Cube()
+    # parse_solve(SCRAMBLE, SOLVE)
+    c.parse_alg_to_slice_moves()
 if __name__ == '__main__':
     main()
 

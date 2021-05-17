@@ -372,11 +372,27 @@ class Cube:
             return "S z'"
 
         return None
+    def parse_rotation_from_alg(self, final_alg):
+        alg_apply_rot = []
+        self.solve_helper = final_alg
+
+        while final_alg:
+            if final_alg[0] in self.rotation:
+                if len(final_alg) > 1:
+                    self.solve_helper = " ".join(final_alg[1:])
+                    self.apply_rotation(final_alg[0])
+                    final_alg.pop(0)
+                    final_alg = self.solve_helper.split()
+                else:
+                    final_alg.pop(0)
+            else:
+                alg_apply_rot.append(final_alg.pop(0))
+        return  alg_apply_rot
     def parse_alg_to_slice_moves(self):
         temp_cube = Cube()
-        alg = "U' D R' U D' F2 U' D R' U D'"
-        alg = "U' R U' D B' U' B U D' R' U U"
-        alg = "R L' F2 R' L D2"
+        alg = " U' D R' U D' F2 U' D R' U D'"
+        # alg = "U' R U' D B' U' B U D' R' U U"
+        # alg = "R L' F2 R' L D2"
         alg_list = alg.split()
         rev_alg = reverse_alg(alg)
         final_alg = []
@@ -393,21 +409,30 @@ class Cube:
             else:
                 final_alg.append(alg_list[0])
                 alg_list.pop(0)
-        alg_apply_rot = []
 
-        while final_alg:
-            if final_alg[0] in temp_cube.rotation:
-                if len(final_alg) > 1:
-                    temp_cube.solve_helper = " ".join(final_alg[1:])
-                    temp_cube.apply_rotation(final_alg[0])
-                    final_alg.pop(0)
-                    final_alg = temp_cube.solve_helper.split()
+        alg_apply_rot = temp_cube.parse_rotation_from_alg(final_alg)
+        final = []
+        final_alg_str = " ".join(alg_apply_rot)
+        if final_alg_str.count('E') == 4:
+            found = 0
+            for i in range(len(alg_apply_rot)):
+                if alg_apply_rot[i] == 'E' or alg_apply_rot[i] == "E'":
+                    found += 1
+                    if found == 1 or found == 4:
+                        if alg_apply_rot[i] == 'E':
+                            final.append("U")
+                            final.append("D'")
+                            final.append("y'")
+                        if alg_apply_rot[i] == "E'":
+                            final.append("U'")
+                            final.append("D")
+                            final.append("y")
+                    else:
+                        final.append(alg_apply_rot[i])
                 else:
-                    final_alg.pop(0)
-            else:
-                alg_apply_rot.append(final_alg.pop(0))
-        print(" ".join(alg_apply_rot))
-
+                    final.append(alg_apply_rot[i])
+            final_alg_str =" ".join(temp_cube.parse_rotation_from_alg(final))
+        return final_alg_str
 
     def gen_solve_to_text(self):
         count = 0

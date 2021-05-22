@@ -410,7 +410,6 @@ class Cube:
         final_alg = []
         temp_cube.solve_helper = alg
         center = temp_cube.current_perm(5)
-        print(center)
         while alg_list:
             slice_move = None
             if len(alg_list) > 1:
@@ -453,8 +452,6 @@ class Cube:
         check_orientation_cube.currently_parsing_smart_cube = True
         fix = check_orientation_cube.fix_rotation()
         final_alg_str += " " + " ".join(fix)
-        print(final_alg_str)
-
         return final_alg_str
 
 
@@ -761,6 +758,17 @@ class Cube:
             cube_helper.exe_move("y")
             str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             front = str_perm[22]
+
+        rot = ["x", "x'","y", "y'", "z", "z'"]
+        final_rot = []
+        if len(rotations) >= 3:
+            for r in range(len(rotations) - 2):
+                if rotations[r] == rotations[r + 1] == rotations[r + 2]:
+                    r_fix = "{}'".format(rotations[r]).replace("''","")
+                    final_rot.append(r_fix)
+                else:
+                    final_rot.append(rotations[r])
+            return final_rot
         return rotations
 
     def y_rotation(self):
@@ -946,7 +954,6 @@ def parse_solve(scramble, solve_attampt):
             cube.solve_stats.append({"count" : count,"move": original_move,"ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 
 
-    print(cube.algs_executed)
     cube.find_mistake()
     print(*cube.solve_stats, sep="\n")
     if cube.gen_parsed_to_cubedb:
@@ -960,17 +967,13 @@ def parse_smart_cube_solve(cube):
         cube.smart_cube = False
         SCRAMBLE = cube.scramble
         SOLVE = ""
-        print("here")
-        print(*cube.algs_executed, sep="\n")
+
         for comm in cube.algs_executed:
             if comm[1]["edge"]:
-                print("fds")
                 smart_cube_alg_parsed = cube.parse_alg_to_slice_moves(comm[0])
-                print(smart_cube_alg_parsed)
                 SOLVE += " " + smart_cube_alg_parsed
             else:
                 SOLVE += " " + comm[0]
-        print(SOLVE)
         parse_solve(SCRAMBLE, SOLVE)
     return None
 
@@ -995,7 +998,6 @@ def main():
     cube = parse_solve(SCRAMBLE, SOLVE)
     parse_smart_cube_solve(cube)
     alg = "U' L' F' B U B U' F B' R B' R' L U"
-    print("herere {}".format(c.parse_alg_to_slice_moves(alg)))
 if __name__ == '__main__':
     main()
 

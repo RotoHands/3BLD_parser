@@ -210,9 +210,7 @@ def alg_maker(comm_str):
             final = final.replace("  ", " ")
             final = final.strip()
         else:
-            print(clip)
             return clip
-    print(final)
     return final
 
 def solve_parser(solve):

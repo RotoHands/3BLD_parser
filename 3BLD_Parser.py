@@ -6,6 +6,7 @@ from difflib import SequenceMatcher
 import pyperclip
 from dotenv import load_dotenv
 import os
+import time
 def ERROR_FUNC():
     print("unknown move: ")
 
@@ -19,6 +20,7 @@ class Cube:
 
         self.dict_stickers = {1: "UBL", 3: "UBR", 7: "UFL", 9: "UFR", 10: "RFU", 12: "RBU", 16: "RFD", 18: "RBD", 19: "FUL", 21: "FUR" , 25: "FDL",27: "FRD", 28: "DFL", 30: "DFR", 34: "DBL", 36: "DBR", 37: "LBU", 39: "LFU", 43: "LDB", 45: "LFD", 46: "BUR", 48: "BUL", 52: "BRD", 54: "BLD", 2: "UB", 4: "UL", 6: "UR", 8: "UF", 11: "RU", 13: "RF", 15: "RB", 17: "RD", 20: "FU", 22: "FL", 24: "FR", 26: "FD", 29: "DF", 31: "DL", 33: "DR", 35: "DB", 38: "LU", 40: "LB", 42: "LF", 44: "LD", 47: "BU", 49: "BR", 51: "BL", 53: "BD" }
 
+        self.gen_with_moves = None
         self.smart_cube = None
         self.gen_parsed_to_cubedb = None
         self.comms_unparsed_bool = None
@@ -28,6 +30,8 @@ class Cube:
         self.buffer_ed = None
         self.buffer_cor = None
         self.path_to_lp = None
+        self.name_of_solve = None
+        self.time_solve = None
         self.algs_executed = []
         self.init_vars()
         self.currently_parsing_smart_cube = False
@@ -82,15 +86,18 @@ class Cube:
 
     def init_vars(self):
         load_dotenv()
-        self.smart_cube = True
+        self.smart_cube = True if os.environ.get("SMART_CUBE") == "True" else False
         self.gen_parsed_to_cubedb = True if os.environ.get("GEN_PARSED_TO_CUBEDB") == "True" else False
-        self.comms_unparsed_bool = False
-        self.gen_with_move_count = True
-        self.diff_to_solved_state = 0.888
-        self.parse_to_lp = True
-        self.buffer_ed = self.get_buffer_ed("UF")
-        self.buffer_cor = self.get_buffer_cor("UFR")
-        self.path_to_lp = "sticker_HEB.txt"
+        self.name_of_solve = os.environ.get("NAME_OF_SOLVE")
+        self.time_solve = os.environ.get("TIME_SOLVE")
+        self.comms_unparsed_bool = True if os.environ.get("COMMS_UNPARSED") == "True" else False
+        self.gen_with_move_count = True if os.environ.get("GEN_WITH_MOVE_COUNT") == "True" else False
+        self.diff_to_solved_state = float(os.environ.get("DIFF_BETWEEN_ALGS"))
+        self.parse_to_lp = True if os.environ.get("PARSE_TO_LETTER_PAIR") == "True" else False
+        self.gen_with_moves = True if os.environ.get("GEN_WITH_MOVE_COUNT") == "True" else False
+        self.buffer_ed = self.get_buffer_ed(os.environ.get("EDGES_BUFFER"))
+        self.buffer_cor = self.get_buffer_cor(os.environ.get("CORNER_BUFFER"))
+        self.path_to_lp = os.environ.get("PATH_LETTER_PAIR_FILE")
         self.dict_lp = self.load_letter_pairs_dict()
 
     def r(self):
@@ -370,19 +377,19 @@ class Cube:
         gets two moves, returns the equivelent slice and rotation move or None
         """
 
-        if m1 == "U'" and m2 == "D":
+        if m1 == "U'" and m2 == "D" or m2 == "U'" and m1 == "D":
             return "E' y'"
-        if m1 == "U" and m2 == "D'":
+        if m1 == "U" and m2 == "D'" or m2 == "U" and m1 == "D'":
             return "E y"
 
-        if m1 == "R" and m2 == "L'":
+        if m1 == "R" and m2 == "L'" or m2 == "R" and m1 == "L'":
             return "M x"
-        if m1 == "R'" and m2 == "L":
+        if m1 == "R'" and m2 == "L" or m2 == "R'" and m1 == "L":
             return "M' x'"
 
-        if m1 == "F" and m2 == "B'":
+        if m1 == "F" and m2 == "B'" or m2 == "F" and m1 == "B'":
             return "S' z"
-        if m1 == "F'" and m2 == "B":
+        if m1 == "F'" and m2 == "B" or m2 == "F'" and m1 == "B":
             return "S z'"
 
         return None
@@ -410,6 +417,7 @@ class Cube:
         final_alg = []
         temp_cube.solve_helper = alg
         center = temp_cube.current_perm(5)
+
         while alg_list:
             slice_move = None
             if len(alg_list) > 1:
@@ -450,6 +458,7 @@ class Cube:
         check_orientation_cube = Cube()
         check_orientation_cube.solve = final_alg_str
         check_orientation_cube.currently_parsing_smart_cube = True
+
         fix = check_orientation_cube.fix_rotation()
         final_alg_str += " " + " ".join(fix)
         return final_alg_str
@@ -466,6 +475,8 @@ class Cube:
         for move in self.solve_stats:
             if self.comms_unparsed_bool:
                 if move["comment"] != "":
+                    if "mistake" in move["comment"]:
+                        move["comment"] = "{}\n//{}".format(move["comment"].split("mistake")[0], "mistake from here")
                     if "#" in move["comment"]:
                         piece = move["comment"].split("#")[0]
                         move["comment"] = move["comment"].split("#")[1]
@@ -480,6 +491,8 @@ class Cube:
                     if move["move"] != "":
                         self.url += "{} ".format(move["move"])
                 if move["comment"] != "":
+                    if "mistake" in move["comment"]:
+                        move["comment"] = "{}\n//{}".format(move["comment"].split("mistake")[0], "mistake from here")
                     if "#" in move["comment"]:
                         piece = move["comment"].split("#")[0]
                         move["comment"] = move["comment"].split("#")[1]
@@ -490,10 +503,9 @@ class Cube:
                         self.url += "// {} \n".format(move["comment"])
                     else:
                         self.url += "// {} \n".format(move["comment"])
-        pyperclip.copy(self.url)
 
     def gen_url(self):
-        self.url = "https://www.cubedb.net/?rank=3&title={}&scramble=".format("test")
+        self.url = "https://www.cubedb.net/?rank=3&title={}&time={}&scramble=".format(self.name_of_solve, self.time_solve)
         for move in self.scramble.split():
             if "\'" in move:
                 move.replace("\'", "-")
@@ -504,6 +516,9 @@ class Cube:
             if self.comms_unparsed_bool:
                 if self.comms_unparsed_bool:
                     if move["comment"] != "":
+                        if "mistake" in move["comment"]:
+                            move["comment"] = "{}%0A//{}".format(move["comment"].split("mistake")[0],
+                                                                 "mistake from here")
                         if "#" in move["comment"]:
                             piece = move["comment"].split("#")[0]
                             move["comment"] = move["comment"].split("#")[1]
@@ -525,6 +540,8 @@ class Cube:
                             move["move"].replace("\'", "-")
                         self.url += "{}_".format(move["move"])
                 if move["comment"] != "":
+                    if "mistake" in move["comment"]:
+                        move["comment"] = "{}%0A//{}".format(move["comment"].split("mistake")[0], "mistake from here")
                     if "#" in move["comment"]:
                         piece = move["comment"].split("#")[0]
                         move["comment"] = move["comment"].split("#")[1]
@@ -538,7 +555,6 @@ class Cube:
                         self.url += "// {} %0A".format(move["comment"])
                     else:
                         self.url += "// {} %0A".format(move["comment"])
-        pyperclip.copy(self.url)
 
     def perm_to_string(self, perm):
         perm_string = ""
@@ -575,6 +591,7 @@ class Cube:
 
     def parse_comm_list(self, comm):
         edges = False
+
         if len(comm[0]) == 2:
             edges = True
 
@@ -731,7 +748,6 @@ class Cube:
                     break
             cube_helper.exe_move(move)
 
-
         str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
         up = str_perm[4]
         front = str_perm[22]
@@ -759,15 +775,18 @@ class Cube:
             str_perm = cube_helper.perm_to_string(cube_helper.current_perm).split()
             front = str_perm[22]
 
-        rot = ["x", "x'","y", "y'", "z", "z'"]
         final_rot = []
-        if len(rotations) >= 3:
-            for r in range(len(rotations) - 2):
-                if rotations[r] == rotations[r + 1] == rotations[r + 2]:
-                    r_fix = "{}'".format(rotations[r]).replace("''","")
-                    final_rot.append(r_fix)
-                else:
-                    final_rot.append(rotations[r])
+        while len(rotations) >= 3:
+            if rotations[0] == rotations[1] == rotations[2]:
+                r_fix = "{}'".format(rotations[0]).replace("''","")
+                final_rot.append(r_fix)
+                rotations.pop(0)
+                rotations.pop(0)
+                rotations.pop(0)
+            else:
+                final_rot.append(rotations[0])
+                rotations.pop(0)
+        if final_rot:
             return final_rot
         return rotations
 
@@ -859,6 +878,13 @@ def keep_comms_unparsed(solve):
         if comm not in description_words:
             comms.append(comm)
     return comms
+def count_moves_in_alg(alg):
+    moves = ["r", "l", "u","d","f","b","m","s","e"]
+    alg = alg.lower()
+    count = 0
+    for m in moves:
+        count += alg.count(m)
+    return count
 
 def parse_solve(scramble, solve_attampt):
     solve = solve_parser(solve_attampt)
@@ -902,6 +928,7 @@ def parse_solve(scramble, solve_attampt):
         cube.solve_stats[count]["comment"] = "memo"
     current_alg = []
     start = count
+    count_moves_from_start = 0
     for i in range (start, len(move_in_solve)):
         original_move = move_in_solve[i]
         current_alg.append(original_move)
@@ -911,13 +938,13 @@ def parse_solve(scramble, solve_attampt):
         solved_edges =  cube.count_solve_edges()
         solved_cor = cube.count_solved_cor()
         diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
-
         if diff > cube.diff_to_solved_state and (count - max_piece_place >= 4):
-            diff_moves = count - start - max_piece_place
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
             comm, piece_type = cube.parse_solved_to_comm()
             cube.algs_executed.append([" ".join(current_alg), piece_type])
+            count_moves = count_moves_in_alg(" ".join(current_alg))
+            count_moves_from_start += count_moves
             current_alg = []
             if piece_type["edge"]:
                 piece = "edges"
@@ -941,63 +968,64 @@ def parse_solve(scramble, solve_attampt):
                         comment = "".join(comm)
                 else:
                     comment = "{} {}".format("".join(comm[:2]), "".join(comm[2:]) )
-                comment = "{}   {}/{}".format(comment, diff_moves,count - start)
+
+                comment = "{}   {}/{}".format(comment, count_moves,count_moves_from_start) if cube.gen_with_moves else comment
 
             else:
-                comment = "{}  {}/{}".format(" ".join(comm[:]), diff_moves,count - start)
+                comment = "{}  {}/{}".format(" ".join(comm[:]), count_moves,count_moves_from_start) if cube.gen_with_moves else "{}".format(" ".join(comm[:]))
 
             if piece != cube.flag_piece_type:
                 comment = "{}#{}".format(piece, comment)
                 cube.flag_piece_type = piece
-            cube.solve_stats.append({"count" : count,"move": original_move,"piece" : piece, "diff_moves": diff_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : comment,  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+            cube.solve_stats.append({"count" : count,"move": original_move,"piece" : piece, "diff_moves": count_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : comment,  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
         else:
             cube.solve_stats.append({"count" : count,"move": original_move,"ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 
+    if current_alg:
+        cube.algs_executed.append([" ".join(current_alg), piece_type])
 
     cube.find_mistake()
-    print(*cube.solve_stats, sep="\n")
+    # print(*cube.solve_stats, sep="\n")
     if cube.gen_parsed_to_cubedb:
         cube.gen_url()
     else:
         cube.gen_solve_to_text()
+
+
     return cube
 
 def parse_smart_cube_solve(cube):
-    if cube.smart_cube:
-        cube.smart_cube = False
-        SCRAMBLE = cube.scramble
-        SOLVE = ""
 
-        for comm in cube.algs_executed:
-            if comm[1]["edge"]:
-                smart_cube_alg_parsed = cube.parse_alg_to_slice_moves(comm[0])
-                SOLVE += " " + smart_cube_alg_parsed
-            else:
-                SOLVE += " " + comm[0]
-        parse_solve(SCRAMBLE, SOLVE)
-    return None
+    cube.smart_cube = False
+    SCRAMBLE = cube.scramble
+    SOLVE = ""
+
+    for comm in cube.algs_executed:
+        if comm[1]["edge"] or comm[1]["parity"]:
+            smart_cube_alg_parsed = cube.parse_alg_to_slice_moves(comm[0])
+            SOLVE += " " + smart_cube_alg_parsed
+        else:
+            SOLVE += " " + comm[0]
+    return parse_solve(SCRAMBLE, SOLVE)
 
 
 def main():
-
     SOLVE = pyperclip.paste()
+    SCRAMBLE = "R2 D' R2 B2 D' R2 F2 D' U2 L' D2 R' F2 L' D L' U' B' L' D Rw "
+    load_dotenv()
 
-
-    SCRAMBLE = "F' R2 B2 F D2 L2 F' D L B' L2 F' U' R D B2 F2 U Rw Uw2 x y2"
-    SCRAMBLE = "L' F2 R' F2 L' D2 F2 R2 F2 L D' B' U2 L U2 R' B' F' R' B2 Rw Uw'"
-    SCRAMBLE = "R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2  R' D' R D R' D' R D U R' D' R D R' D' R D U R' D' R D R' D' R D U2 "
-    SCRAMBLE = "U' R B2 R B2 R D2 R F2 L' B2 R' F2 U' F2 R2 U' L F' L2 B Fw Uw'"
-    SCRAMBLE = "z2 y U2 B' R2 D2 F2 R2 B D2 F2 U B2 L B F' U' F D' B2 D' Rw2 Uw2"
-    SCRAMBLE = "R U2 D L' U L' F B R2 U D' R2 U' B2 U F2 B'"
-    SCRAMBLE = "x' y F2 D' F2 L2 U2 B2 U2 F2 L2 U' R2 F D2 B2 L' R B' D B2 F L Rw Uw2"
-    with open("example_smart.txt", "r") as f:
+    with open(os.environ.get("TXT_FILE_OF_SOLVE"), "r") as f:
         data = f.readlines()
         SCRAMBLE = data[0]
         SOLVE = data[1]
-    c = Cube()
+
     cube = parse_solve(SCRAMBLE, SOLVE)
-    parse_smart_cube_solve(cube)
-    alg = "U' L' F' B U B U' F B' R B' R' L U"
+    solve_str = cube.url
+    pyperclip.copy(solve_str)
+    if cube.smart_cube:
+        cube = parse_smart_cube_solve(cube)
+    solve_str = cube.url
+    pyperclip.copy(solve_str)
 if __name__ == '__main__':
     main()
 

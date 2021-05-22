@@ -5,7 +5,7 @@ import re
 from difflib import SequenceMatcher
 import pyperclip
 from dotenv import load_dotenv
-
+import os
 def ERROR_FUNC():
     print("unknown move: ")
 
@@ -19,7 +19,8 @@ class Cube:
 
         self.dict_stickers = {1: "UBL", 3: "UBR", 7: "UFL", 9: "UFR", 10: "RFU", 12: "RBU", 16: "RFD", 18: "RBD", 19: "FUL", 21: "FUR" , 25: "FDL",27: "FRD", 28: "DFL", 30: "DFR", 34: "DBL", 36: "DBR", 37: "LBU", 39: "LFU", 43: "LDB", 45: "LFD", 46: "BUR", 48: "BUL", 52: "BRD", 54: "BLD", 2: "UB", 4: "UL", 6: "UR", 8: "UF", 11: "RU", 13: "RF", 15: "RB", 17: "RD", 20: "FU", 22: "FL", 24: "FR", 26: "FD", 29: "DF", 31: "DL", 33: "DR", 35: "DB", 38: "LU", 40: "LB", 42: "LF", 44: "LD", 47: "BU", 49: "BR", 51: "BL", 53: "BD" }
 
-        self.gen_url_bool = None
+        self.smart_cube = None
+        self.gen_parsed_to_cubedb = None
         self.comms_unparsed_bool = None
         self.gen_with_move_count = None
         self.diff_to_solved_state = None
@@ -27,7 +28,9 @@ class Cube:
         self.buffer_ed = None
         self.buffer_cor = None
         self.path_to_lp = None
+        self.algs_executed = []
         self.init_vars()
+        self.currently_parsing_smart_cube = False
         self.corners_numbers = [1, 3, 7, 9, 10, 12, 16, 18, 19, 21, 25, 27, 28, 30, 34, 36, 37, 39, 43, 45, 46, 48, 52, 54]
         self.edges_numbers = [2, 4, 6, 8, 11, 13, 15, 17, 20, 22, 24, 26, 29, 31, 33, 35, 38, 40, 42, 44, 47, 49, 51, 53]
         self.current_perm_list = []
@@ -79,7 +82,8 @@ class Cube:
 
     def init_vars(self):
         load_dotenv()
-        self.gen_url_bool = True
+        self.smart_cube = True
+        self.gen_parsed_to_cubedb = True if os.environ.get("GEN_PARSED_TO_CUBEDB") == "True" else False
         self.comms_unparsed_bool = False
         self.gen_with_move_count = True
         self.diff_to_solved_state = 0.888
@@ -398,16 +402,15 @@ class Cube:
             else:
                 alg_apply_rot.append(final_alg.pop(0))
         return  alg_apply_rot
-    def parse_alg_to_slice_moves(self):
+
+    def parse_alg_to_slice_moves(self, alg):
         temp_cube = Cube()
-        alg = " U' D R' U D' F2 U' D R' U D'"
-        # alg = "U' R U' D B' U' B U D' R' U U"
-        # alg = "R L' F2 R' L D2"
         alg_list = alg.split()
         rev_alg = reverse_alg(alg)
         final_alg = []
-        flag = False
         temp_cube.solve_helper = alg
+        center = temp_cube.current_perm(5)
+        print(center)
         while alg_list:
             slice_move = None
             if len(alg_list) > 1:
@@ -441,8 +444,20 @@ class Cube:
                         final.append(alg_apply_rot[i])
                 else:
                     final.append(alg_apply_rot[i])
+
+
+
             final_alg_str =" ".join(temp_cube.parse_rotation_from_alg(final))
+        check_orientation_cube = Cube()
+        check_orientation_cube.solve = final_alg_str
+        check_orientation_cube.currently_parsing_smart_cube = True
+        fix = check_orientation_cube.fix_rotation()
+        final_alg_str += " " + " ".join(fix)
+        print(final_alg_str)
+
         return final_alg_str
+
+
 
     def gen_solve_to_text(self):
         count = 0
@@ -704,6 +719,7 @@ class Cube:
 
         self.current_facelet = "{}{}".format("0",''.join(facelet[1:]))
 
+
     def fix_rotation(self):
         cube_helper = Cube()
         cube_helper.scramble = self.scramble.split()
@@ -714,7 +730,8 @@ class Cube:
             cube_helper.exe_move(move)
         for move in cube_helper.solve:
             if move not in cube_helper.rotation:
-                break
+                if not self.currently_parsing_smart_cube:
+                    break
             cube_helper.exe_move(move)
 
 
@@ -722,7 +739,6 @@ class Cube:
         up = str_perm[4]
         front = str_perm[22]
         flag = False
-
         for i in range (4):
             if (up == "5"):
                 flag = True
@@ -858,9 +874,11 @@ def parse_solve(scramble, solve_attampt):
     move_in_solve = cube.solve.split()
     max_piece_place = 0
     flag = False
+    current_alg = []
     while move_in_solve[count] in cube.rotation:
         flag = True
         original_move = move_in_solve[count]
+        current_alg.append(original_move)
         exe_move = cube.solve_helper.split()[count]
         count += 1
         cube.exe_move(exe_move)
@@ -872,11 +890,13 @@ def parse_solve(scramble, solve_attampt):
              "diff": diff, "perm": cube.perm_to_string(cube.current_perm)})
         cube.current_max_perm_list = (cube.current_perm)
     if flag:
+        cube.algs_executed.append(" ".join(current_alg))
         cube.solve_stats[count]["comment"] = "memo"
+    current_alg = []
     start = count
-
     for i in range (start, len(move_in_solve)):
         original_move = move_in_solve[i]
+        current_alg.append(original_move)
         exe_move = cube.solve_helper.split()[i]
         count += 1
         cube.exe_move(exe_move)
@@ -889,6 +909,8 @@ def parse_solve(scramble, solve_attampt):
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
             comm, piece_type = cube.parse_solved_to_comm()
+            cube.algs_executed.append([" ".join(current_alg), piece_type])
+            current_alg = []
             if piece_type["edge"]:
                 piece = "edges"
             elif piece_type["corner"]:
@@ -923,13 +945,35 @@ def parse_solve(scramble, solve_attampt):
         else:
             cube.solve_stats.append({"count" : count,"move": original_move,"ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 
+
+    print(cube.algs_executed)
     cube.find_mistake()
     print(*cube.solve_stats, sep="\n")
-    if cube.gen_url_bool:
+    if cube.gen_parsed_to_cubedb:
         cube.gen_url()
     else:
         cube.gen_solve_to_text()
     return cube
+
+def parse_smart_cube_solve(cube):
+    if cube.smart_cube:
+        cube.smart_cube = False
+        SCRAMBLE = cube.scramble
+        SOLVE = ""
+        print("here")
+        print(*cube.algs_executed, sep="\n")
+        for comm in cube.algs_executed:
+            if comm[1]["edge"]:
+                print("fds")
+                smart_cube_alg_parsed = cube.parse_alg_to_slice_moves(comm[0])
+                print(smart_cube_alg_parsed)
+                SOLVE += " " + smart_cube_alg_parsed
+            else:
+                SOLVE += " " + comm[0]
+        print(SOLVE)
+        parse_solve(SCRAMBLE, SOLVE)
+    return None
+
 
 def main():
 
@@ -943,14 +987,15 @@ def main():
     SCRAMBLE = "z2 y U2 B' R2 D2 F2 R2 B D2 F2 U B2 L B F' U' F D' B2 D' Rw2 Uw2"
     SCRAMBLE = "R U2 D L' U L' F B R2 U D' R2 U' B2 U F2 B'"
     SCRAMBLE = "x' y F2 D' F2 L2 U2 B2 U2 F2 L2 U' R2 F D2 B2 L' R B' D B2 F L Rw Uw2"
-
     with open("example_smart.txt", "r") as f:
         data = f.readlines()
         SCRAMBLE = data[0]
         SOLVE = data[1]
     c = Cube()
-    # parse_solve(SCRAMBLE, SOLVE)
-    c.parse_alg_to_slice_moves()
+    cube = parse_solve(SCRAMBLE, SOLVE)
+    parse_smart_cube_solve(cube)
+    alg = "U' L' F' B U B U' F B' R B' R' L U"
+    print("herere {}".format(c.parse_alg_to_slice_moves(alg)))
 if __name__ == '__main__':
     main()
 

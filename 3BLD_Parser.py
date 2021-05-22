@@ -34,6 +34,7 @@ class Cube:
         self.time_solve = None
         self.algs_executed = []
         self.init_vars()
+
         self.currently_parsing_smart_cube = False
         self.corners_numbers = [1, 3, 7, 9, 10, 12, 16, 18, 19, 21, 25, 27, 28, 30, 34, 36, 37, 39, 43, 45, 46, 48, 52, 54]
         self.edges_numbers = [2, 4, 6, 8, 11, 13, 15, 17, 20, 22, 24, 26, 29, 31, 33, 35, 38, 40, 42, 44, 47, 49, 51, 53]
@@ -56,6 +57,7 @@ class Cube:
         self.rotation = ['x', 'x\'', 'x2', 'z', 'z\'', 'z2', 'y', 'y\'', 'y2']
         self.last_solved_pieces = {}
         self.current_facelet = ""
+
         self.R = permutation.Permutation(1, 2, 21, 4, 5, 24, 7, 8, 27, 16, 13, 10, 17, 14, 11, 18, 15, 12, 19, 20, 30, 22, 23, 33, 25, 26, 36, 28, 29, 52, 31, 32, 49, 34, 35, 46, 37, 38, 39, 40, 41,42, 43, 44, 45, 9, 47, 48, 6, 50, 51, 3, 53, 54).inverse()
         self.RP = self.R.inverse()
         self.R2 = self.R * self.R
@@ -85,6 +87,10 @@ class Cube:
         self.E2 = self.E * self.E
 
     def init_vars(self):
+        """
+        initiate the environment variables from .env file to the class attributes
+        """
+
         load_dotenv()
         self.smart_cube = True if os.environ.get("SMART_CUBE") == "True" else False
         self.gen_parsed_to_cubedb = True if os.environ.get("GEN_PARSED_TO_CUBEDB") == "True" else False
@@ -104,7 +110,6 @@ class Cube:
         self.current_perm =  self.R * self.current_perm
     def rp(self):
         self.current_perm =  self.RP * self.current_perm
-
     def r2(self):
         self.current_perm = self.R2 * self.current_perm
     def l(self):
@@ -338,17 +343,31 @@ class Cube:
 
     }
         funcMoves.get(move)()
+
     def get_buffer_cor(self, cor_name):
+        """
+        gets the corner buffer name and return its number in the cube permutation
+        """
         for i in range(1,55):
             if  i in self.dict_stickers:
                 if self.dict_stickers[i] == cor_name:
                     return i
+
     def get_buffer_ed(self, ed_name):
+        """
+        gets the edge buffer name and return its number in the cube permutation
+        """
         for i in range(1,55):
             if i in self.dict_stickers:
                 if self.dict_stickers[i] == ed_name:
                     return i
+
     def load_letter_pairs_dict(self):
+        """
+        gets a text file with list of place in cube and its letter pair ("ULB" : "A").
+        returns a dictionary object of { place : letter_pair }
+        """
+
         with open(self.path_to_lp ,"r", encoding="utf-8") as f:
             dict_lp = {}
             file = f.readlines()
@@ -358,35 +377,49 @@ class Cube:
         return (dict_lp)
 
     def string_permutation(self, a,b):
+        """
+        gets two str that represent place on the cube (UFR, DF...)
+        if they are the same piece, returns True (UFR, RFU)
+        """
         for c in a:
             if c not in b:
                 return False
         return True
 
-    def string_permutation_list(self, a,b):
-        for word in b:
-            if self.string_permutation(word,a):
+    def string_permutation_list(self, elem, list):
+        """
+        gets an str and a list of str.
+        returns True if the element is the same piece of another element in the list (UFR, [LUB, DBL, RFU])
+        """
+        for elem_list in list:
+            if self.string_permutation(elem_list,elem):
                 return True
         return False
 
     def diff_states(self, perm_list):
+        """
+        gets two permutation of cubes, converts to str and returns the difference between them using SequenceMatcher.
+        this is the core algorithm of the whole software. it comes from the idea that when you solve bld then you
+        solve small amount of pieces each time ==> the similarity between their string representation will be high,
+        and we can find the separation between the different comms!
+        """
+
         return SequenceMatcher(None, self.perm_to_string(self.current_max_perm_list), perm_list).ratio()
 
     def check_slice(self, m1, m2):
         """
-        gets two moves, returns the equivelent slice and rotation move or None
+        gets two moves, returns the equivalent slice and rotation move or None
+        this is used to overcome the issue of smart cube, that they can't detect slice moves
         """
 
         if m1 == "U'" and m2 == "D" or m2 == "U'" and m1 == "D":
             return "E' y'"
         if m1 == "U" and m2 == "D'" or m2 == "U" and m1 == "D'":
             return "E y"
-
         if m1 == "R" and m2 == "L'" or m2 == "R" and m1 == "L'":
             return "M x"
         if m1 == "R'" and m2 == "L" or m2 == "R'" and m1 == "L":
             return "M' x'"
-
         if m1 == "F" and m2 == "B'" or m2 == "F" and m1 == "B'":
             return "S' z"
         if m1 == "F'" and m2 == "B" or m2 == "F'" and m1 == "B":
@@ -594,7 +627,6 @@ class Cube:
 
         if len(comm[0]) == 2:
             edges = True
-
         if self.string_permutation(comm[0], comm[1]):
             if edges:
                 found = []
@@ -1010,18 +1042,17 @@ def parse_smart_cube_solve(cube):
 
 
 def main():
+    load_dotenv()
     SOLVE = pyperclip.paste()
     SCRAMBLE = "R2 D' R2 B2 D' R2 F2 D' U2 L' D2 R' F2 L' D L' U' B' L' D Rw "
-    load_dotenv()
-
-    with open(os.environ.get("TXT_FILE_OF_SOLVE"), "r") as f:
-        data = f.readlines()
-        SCRAMBLE = data[0]
-        SOLVE = data[1]
+    use_clipboard = True if os.environ.get('USE_CLIPBOARD') == "True" else False
+    if not use_clipboard:
+        with open(os.environ.get("TXT_FILE_OF_SOLVE"), "r") as f:
+            data = f.readlines()
+            SCRAMBLE = data[0]
+            SOLVE = data[1]
 
     cube = parse_solve(SCRAMBLE, SOLVE)
-    solve_str = cube.url
-    pyperclip.copy(solve_str)
     if cube.smart_cube:
         cube = parse_smart_cube_solve(cube)
     solve_str = cube.url

@@ -1,10 +1,10 @@
-
 from bld_comm_parser import solve_parser
 from bld_comm_parser import reverse_alg
 import permutation
 import re
 from difflib import SequenceMatcher
 import pyperclip
+from dotenv import load_dotenv
 
 def ERROR_FUNC():
     print("unknown move: ")
@@ -19,7 +19,15 @@ class Cube:
 
         self.dict_stickers = {1: "UBL", 3: "UBR", 7: "UFL", 9: "UFR", 10: "RFU", 12: "RBU", 16: "RFD", 18: "RBD", 19: "FUL", 21: "FUR" , 25: "FDL",27: "FRD", 28: "DFL", 30: "DFR", 34: "DBL", 36: "DBR", 37: "LBU", 39: "LFU", 43: "LDB", 45: "LFD", 46: "BUR", 48: "BUL", 52: "BRD", 54: "BLD", 2: "UB", 4: "UL", 6: "UR", 8: "UF", 11: "RU", 13: "RF", 15: "RB", 17: "RD", 20: "FU", 22: "FL", 24: "FR", 26: "FD", 29: "DF", 31: "DL", 33: "DR", 35: "DB", 38: "LU", 40: "LB", 42: "LF", 44: "LD", 47: "BU", 49: "BR", 51: "BL", 53: "BD" }
 
-        self.dict_lp = self.load_letter_pairs_dict()
+        self.gen_url_bool = None
+        self.comms_unparsed_bool = None
+        self.gen_with_move_count = None
+        self.diff_to_solved_state = None
+        self.parse_to_lp = None
+        self.buffer_ed = None
+        self.buffer_cor = None
+        self.path_to_lp = None
+        self.init_vars()
         self.corners_numbers = [1, 3, 7, 9, 10, 12, 16, 18, 19, 21, 25, 27, 28, 30, 34, 36, 37, 39, 43, 45, 46, 48, 52, 54]
         self.edges_numbers = [2, 4, 6, 8, 11, 13, 15, 17, 20, 22, 24, 26, 29, 31, 33, 35, 38, 40, 42, 44, 47, 49, 51, 53]
         self.current_perm_list = []
@@ -29,22 +37,17 @@ class Cube:
         self.solve_stats = []
         self.current_perm = self.solved_perm
         self.flag_piece_type = ""
-        self.gen_url_bool = True
-        self.comms_unparsed_bool = False
         self.comms_unparsed = []
         self.scramble = ""
         self.solve = ""
         self.solve_helper = ""
         self.url = ""
-        self.parse_to_lp = True
         self.current_max_perm_list = None
         self.current_max_perm = None
         self.parity = None
         self.max_edges = 12
         self.rotation = ['x', 'x\'', 'x2', 'z', 'z\'', 'z2', 'y', 'y\'', 'y2']
         self.last_solved_pieces = {}
-        self.buffer_ed = self.get_buffer_ed("UF")
-        self.buffer_cor = self.get_buffer_cor("UFR")
         self.current_facelet = ""
         self.R = permutation.Permutation(1, 2, 21, 4, 5, 24, 7, 8, 27, 16, 13, 10, 17, 14, 11, 18, 15, 12, 19, 20, 30, 22, 23, 33, 25, 26, 36, 28, 29, 52, 31, 32, 49, 34, 35, 46, 37, 38, 39, 40, 41,42, 43, 44, 45, 9, 47, 48, 6, 50, 51, 3, 53, 54).inverse()
         self.RP = self.R.inverse()
@@ -74,43 +77,17 @@ class Cube:
         self.EP = self.E.inverse()
         self.E2 = self.E * self.E
 
-
-
-    def get_buffer_cor(self, cor_name):
-        for i in range(1,55):
-            if  i in self.dict_stickers:
-                if self.dict_stickers[i] == cor_name:
-                    return i
-    def get_buffer_ed(self, ed_name):
-        for i in range(1,55):
-            if i in self.dict_stickers:
-                if self.dict_stickers[i] == ed_name:
-                    return i
-    def load_letter_pairs_dict(self):
-        with open("sticker_HEB.txt" ,"r", encoding="utf-8") as f:
-            dict_lp = {}
-            file = f.readlines()
-            for line in file:
-                split_data = re.findall('"([^"]*)"', line)
-                dict_lp[split_data[0]] = split_data[1]
-        return (dict_lp)
-
-    def string_permutation(self, a,b):
-        for c in a:
-            if c not in b:
-                return False
-        return True
-
-    def string_permutation_list(self, a,b):
-        for word in b:
-            if self.string_permutation(word,a):
-                return True
-        return False
-
-    def diff_states(self, perm_list):
-        return SequenceMatcher(None, self.perm_to_string(self.current_max_perm_list), perm_list).ratio()
-
-
+    def init_vars(self):
+        load_dotenv()
+        self.gen_url_bool = True
+        self.comms_unparsed_bool = False
+        self.gen_with_move_count = True
+        self.diff_to_solved_state = 0.888
+        self.parse_to_lp = True
+        self.buffer_ed = self.get_buffer_ed("UF")
+        self.buffer_cor = self.get_buffer_cor("UFR")
+        self.path_to_lp = "sticker_HEB.txt"
+        self.dict_lp = self.load_letter_pairs_dict()
 
     def r(self):
         self.current_perm =  self.R * self.current_perm
@@ -350,6 +327,39 @@ class Cube:
 
     }
         funcMoves.get(move)()
+    def get_buffer_cor(self, cor_name):
+        for i in range(1,55):
+            if  i in self.dict_stickers:
+                if self.dict_stickers[i] == cor_name:
+                    return i
+    def get_buffer_ed(self, ed_name):
+        for i in range(1,55):
+            if i in self.dict_stickers:
+                if self.dict_stickers[i] == ed_name:
+                    return i
+    def load_letter_pairs_dict(self):
+        with open(self.path_to_lp ,"r", encoding="utf-8") as f:
+            dict_lp = {}
+            file = f.readlines()
+            for line in file:
+                split_data = re.findall('"([^"]*)"', line)
+                dict_lp[split_data[0]] = split_data[1]
+        return (dict_lp)
+
+    def string_permutation(self, a,b):
+        for c in a:
+            if c not in b:
+                return False
+        return True
+
+    def string_permutation_list(self, a,b):
+        for word in b:
+            if self.string_permutation(word,a):
+                return True
+        return False
+
+    def diff_states(self, perm_list):
+        return SequenceMatcher(None, self.perm_to_string(self.current_max_perm_list), perm_list).ratio()
 
     def check_slice(self, m1, m2):
         """
@@ -585,7 +595,6 @@ class Cube:
         comm = []
         piece_type = {"edge" : False, "corner": False, "parity" : False}
         if self.buffer_ed in self.last_solved_pieces:
-            print("here")
             piece_type["edge"] = True
             comm.append(self.buffer_ed)
             current_num = self.last_solved_pieces[self.buffer_ed][0]
@@ -600,7 +609,6 @@ class Cube:
                         break
 
         if self.buffer_cor in self.last_solved_pieces:
-            print("here cor")
             piece_type["corner"] = True
             comm.append(self.buffer_cor)
             current_num = self.last_solved_pieces[self.buffer_cor][0]
@@ -665,7 +673,6 @@ class Cube:
             comm[i] = self.dict_stickers[comm[i]]
         comm = self.parse_comm_list(comm)
 
-        print("comm : {}".format(comm))
         for i in range(len(comm)):
             if self.parse_to_lp:
                 if (' twist' != comm[i]) and (' flip' != comm[i]):
@@ -827,9 +834,8 @@ def keep_comms_unparsed(solve):
                 comm = comm[:comm.find("/")]
         if comm not in description_words:
             comms.append(comm)
-    print("here")
-    print(comms)
     return comms
+
 def parse_solve(scramble, solve_attampt):
     solve = solve_parser(solve_attampt)
     SOLVED = "0UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
@@ -877,10 +883,8 @@ def parse_solve(scramble, solve_attampt):
         solved_edges =  cube.count_solve_edges()
         solved_cor = cube.count_solved_cor()
         diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
-        flag_first_alg = True
-        flag_first_piece = None
-        flag_change_piece = False
-        if diff > 0.888 and (count - max_piece_place >= 4):
+
+        if diff > cube.diff_to_solved_state and (count - max_piece_place >= 4):
             diff_moves = count - start - max_piece_place
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
@@ -955,7 +959,7 @@ if __name__ == '__main__':
 # done sticker to letter pair option
 # done option to show unparsed algs
 # done parity not with buffer
-# add translate from smart cube to solve
+# done translate from smart cube to solve
 # done option to paste to text
 # done count to moves
 # done (M U M' U')2 like algs to parser

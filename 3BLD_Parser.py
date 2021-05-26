@@ -427,6 +427,10 @@ class Cube:
 
         return None
     def parse_rotation_from_alg(self, final_alg):
+        """
+        gets an alg with rotation in it. applies the rotation to the alg so that no rotation are in it.
+        U' R E' y' B' U U B E y R' U' --> U' R E' R' U U R E R' U'
+        """
         alg_apply_rot = []
         self.solve_helper = final_alg
 
@@ -444,13 +448,21 @@ class Cube:
         return  alg_apply_rot
 
     def parse_alg_to_slice_moves(self, alg):
+        """
+        gets an alg str from smart cube. converts it to the slice moves applied
+        U' R U' D B' U U B U D' R' U' --> U' R E' R' U U R E R' U'
+
+        this is also a main part of the software, how it works?
+        1. it apllies only on edges alg (you dont do slice moves in corners solving in 3style)
+        2. coverts parallel faces to a slice move
+        3. in special cases (such as U' D R' E R2 E' R' U D') it only converts the middle parallel faces to slice moves
+        """
         temp_cube = Cube()
         alg_list = alg.split()
         rev_alg = reverse_alg(alg)
         final_alg = []
         temp_cube.solve_helper = alg
         center = temp_cube.current_perm(5)
-
         while alg_list:
             slice_move = None
             if len(alg_list) > 1:
@@ -462,7 +474,6 @@ class Cube:
             else:
                 final_alg.append(alg_list[0])
                 alg_list.pop(0)
-
         alg_apply_rot = temp_cube.parse_rotation_from_alg(final_alg)
         final = []
         final_alg_str = " ".join(alg_apply_rot)
@@ -499,6 +510,10 @@ class Cube:
 
 
     def gen_solve_to_text(self):
+        """
+        generates the solve to a text format
+        """
+
         count = 0
         self.url = "scramble: \n"
         for move in self.scramble.split():
@@ -538,6 +553,9 @@ class Cube:
                         self.url += "// {} \n".format(move["comment"])
 
     def gen_url(self):
+        """
+        generates the solve to cubedb.net url format
+        """
         self.url = "https://www.cubedb.net/?rank=3&title={}&time={}&scramble=".format(self.name_of_solve, self.time_solve)
         for move in self.scramble.split():
             if "\'" in move:
@@ -590,11 +608,15 @@ class Cube:
                         self.url += "// {} %0A".format(move["comment"])
 
     def perm_to_string(self, perm):
+        """
+        converts permutation object to str
+        """
         perm_string = ""
         for i in range(1,55):
             perm_string += str(perm(i)) + " "
 
         return (perm_string)
+
     def count_solved_cor(self):
         solved_corners = 0
         current_perm_list = self.perm_to_string(self.current_perm).split()
@@ -612,6 +634,10 @@ class Cube:
         return int(solved_edges/2)
 
     def diff_solved_state(self):
+        """
+        gets two permutation of cube and return the pieces which got solved between the twp states
+        """
+
         last = self.current_max_perm_list
         current = self.current_perm
         last = self.perm_to_string(last.inverse()).split()
@@ -623,8 +649,11 @@ class Cube:
         return last_solved_pieces
 
     def parse_comm_list(self, comm):
+        """
+        gets a commutator list ([''UF', 'UB', 'LB'])
+        returns special cases (flip, twist) or original
+        """
         edges = False
-
         if len(comm[0]) == 2:
             edges = True
         if self.string_permutation(comm[0], comm[1]):
@@ -653,6 +682,10 @@ class Cube:
         return comm_new
 
     def parse_solved_to_comm(self):
+        """
+        analyzes last pieces solved, then parse it into commutator.
+        return the commutator (as letter_pair - AB or UF -> UB -> UR), and piece type that was solved
+        """
         comm = []
         piece_type = {"edge" : False, "corner": False, "parity" : False}
         if self.buffer_ed in self.last_solved_pieces:
@@ -738,12 +771,12 @@ class Cube:
             if self.parse_to_lp:
                 if (' twist' != comm[i]) and (' flip' != comm[i]):
                     comm[i] = self.dict_lp[comm[i]]
-
-
-
         return (comm, piece_type)
 
     def exe_move(self, move):
+        """
+        gets a str that represents a move, executes the move on the permutation variable in the cube class
+        """
         self.singlemoveExecute(move)
         facelet_str = self.current_perm.__str__()
         self.current_perm_list = []
@@ -767,6 +800,10 @@ class Cube:
 
 
     def fix_rotation(self):
+        """
+        the software only works for White-Green orientation. so if the first move is not in WG orientation
+        it corrects the orientation to apply the move on WG orientation.
+        """
         cube_helper = Cube()
         cube_helper.scramble = self.scramble.split()
         cube_helper.solve = self.solve.split()
@@ -823,7 +860,9 @@ class Cube:
         return rotations
 
     def y_rotation(self):
-
+        """
+        applies a y rotation to the moves in the alg
+        """
         before = ('R','r', 'B', 'b', 'L', 'l','F','f','M' , 'z' ,'S', 'x')
         after =  ('B','b', 'L', 'l', 'F', 'f','R','r','S' , 'x' ,"M'", "z'")
         solve = self.solve_helper.maketrans(dict(zip(before, after)))
@@ -839,7 +878,9 @@ class Cube:
         self.y_rotation()
 
     def x_rotation(self):
-
+        """
+        applies a z rotation to the moves in the alg
+        """
         before = ('U', 'u', 'F', 'f', 'D', 'd', 'B', 'b', 'S', 'E', 'y', 'z')
         after  = ('F', 'f', 'D', 'd', 'B', 'b', 'U', 'u', 'E', 'S\'', "z", "y'")
         solve = self.solve_helper.maketrans(dict(zip(before, after)))
@@ -856,7 +897,9 @@ class Cube:
         self.x_rotation()
 
     def z_rotation(self):
-
+        """
+        applies a z rotation to the moves in the alg
+        """
         before = ('R', 'r', 'U', 'u', 'L', 'l', 'D', 'd', 'M', 'E', 'x', 'y')
         after  = ('U', 'u', 'L', 'l', 'D', 'd', 'R', 'r', 'E', 'M\'', "y", "x'")
         solve = self.solve_helper.maketrans(dict(zip(before, after)))
@@ -886,21 +929,21 @@ class Cube:
     }
         funcMoves.get(rotation)()
 
-    def parse_rotations(self):
-
-        solve_move_list = self.solve.split()
-        for move in solve_move_list:
-            if move in self.rotation:
-                self.apply_rotation(move)
-
     def find_mistake(self):
+        """
+        finds the last point in the solve that you executed correctly
+        """
         if self.solve_stats[-1]["comment"] == "":
             for stat in reversed(self.solve_stats):
                 if stat["comment"] != "":
                     self.solve_stats[stat["count"]]["comment"] += "mistake from here"
                     break
-def keep_comms_unparsed(solve):
 
+def keep_comms_unparsed(solve):
+    """
+    if you use a reconstruction that the algs are in the format of [U, R U R'],
+    you can choose in .env file to keep in the view the comms unparsed
+    """
     description_words = ["corners", "edges", "parity", ""]
     solve_split =  solve.split("\r\n")
     comms = []
@@ -910,6 +953,7 @@ def keep_comms_unparsed(solve):
         if comm not in description_words:
             comms.append(comm)
     return comms
+
 def count_moves_in_alg(alg):
     moves = ["r", "l", "u","d","f","b","m","s","e"]
     alg = alg.lower()
@@ -919,6 +963,10 @@ def count_moves_in_alg(alg):
     return count
 
 def parse_solve(scramble, solve_attampt):
+    """
+    main function, parses the solve. most of the data will be in cube.solve stats
+    """
+
     solve = solve_parser(solve_attampt)
     SOLVED = "0UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
     cube = Cube()
@@ -1022,12 +1070,12 @@ def parse_solve(scramble, solve_attampt):
         cube.gen_url()
     else:
         cube.gen_solve_to_text()
-
-
     return cube
 
 def parse_smart_cube_solve(cube):
-
+    """
+    parse solve if solve string was generated by smart cube
+    """
     cube.smart_cube = False
     SCRAMBLE = cube.scramble
     SOLVE = ""
@@ -1040,11 +1088,11 @@ def parse_smart_cube_solve(cube):
             SOLVE += " " + comm[0]
     return parse_solve(SCRAMBLE, SOLVE)
 
-
 def main():
-    load_dotenv()
-    SOLVE = pyperclip.paste()
+    load_dotenv() # load .env variable
+    SOLVE = pyperclip.paste() # get the solve from the clipboard. I found it more comfortable
     SCRAMBLE = "R2 D' R2 B2 D' R2 F2 D' U2 L' D2 R' F2 L' D L' U' B' L' D Rw "
+
     use_clipboard = True if os.environ.get('USE_CLIPBOARD') == "True" else False
     if not use_clipboard:
         with open(os.environ.get("TXT_FILE_OF_SOLVE"), "r") as f:
@@ -1055,6 +1103,7 @@ def main():
     cube = parse_solve(SCRAMBLE, SOLVE)
     if cube.smart_cube:
         cube = parse_smart_cube_solve(cube)
+
     solve_str = cube.url
     pyperclip.copy(solve_str)
 if __name__ == '__main__':

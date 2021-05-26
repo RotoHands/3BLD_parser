@@ -7,6 +7,14 @@ you reconstruct a bld solve but dont want to follow and write the comms but only
 you have a smart cube and you want to auto reconstruct the solution to bld (checkout my smart cube DNF analyzer [repo](https://github.com/RotoHands/RotoDNF_analyzer))  
 you look at a reconstruction and the comms are written in [A , B] format' and you want to see the final alg (basicilly after all the cancellations)
 
+
+UF -> UB -> LB
+U' R U' D B' U U B U D' R' U'
+U' R E' y' B' U U B E y R' U'
+U' R E' R' U U R E R' U'
+
+
+
 ## example:
 scramble  
 L2 U R2 F2 R2 B2 D2 U F2 U L2 R B L' F D L' D' L2 F2 U'

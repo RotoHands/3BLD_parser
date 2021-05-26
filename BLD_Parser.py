@@ -3,10 +3,8 @@ from bld_comm_parser import reverse_alg
 import permutation
 import re
 from difflib import SequenceMatcher
-import pyperclip
 from dotenv import load_dotenv
 import os
-import time
 def ERROR_FUNC():
     print("unknown move: ")
 
@@ -1089,26 +1087,9 @@ def parse_smart_cube_solve(cube):
     return parse_solve(SCRAMBLE, SOLVE)
 
 def main():
-    load_dotenv() # load .env variable
-    SOLVE = pyperclip.paste() # get the solve from the clipboard. I found it more comfortable
-    SCRAMBLE = "R2 D' R2 B2 D' R2 F2 D' U2 L' D2 R' F2 L' D L' U' B' L' D Rw "
-
-    use_clipboard = True if os.environ.get('USE_CLIPBOARD') == "True" else False
-    if not use_clipboard:
-        with open(os.environ.get("TXT_FILE_OF_SOLVE"), "r") as f:
-            data = f.readlines()
-            SCRAMBLE = data[0]
-            SOLVE = data[1]
-
-    cube = parse_solve(SCRAMBLE, SOLVE)
-    if cube.smart_cube:
-        cube = parse_smart_cube_solve(cube)
-
-    solve_str = cube.url
-    pyperclip.copy(solve_str)
+    pass
 if __name__ == '__main__':
     main()
-
 #TODO: x y // memo --> comm that starts with rotation
 # done twisted and flips --> even with 3twist and 4 flips
 # done sticker to letter pair option

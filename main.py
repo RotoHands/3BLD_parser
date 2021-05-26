@@ -21,3 +21,4 @@ if __name__ == '__main__':
     solve_str = cube.url
     pyperclip.copy(solve_str)
     print(solve_str)
+    print(*cube.solve_stats, sep="\n")

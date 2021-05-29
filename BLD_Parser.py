@@ -1087,6 +1087,9 @@ def parse_smart_cube_solve(cube):
     return parse_solve(SCRAMBLE, SOLVE)
 
 def parse_url(url):
+    """
+    gets a url from alg.cubing.net or cubedb.net and returns a dictionary of the elements of the url parsed (scramble, solve, title, time)
+    """
     split_url = url.split("&")
     url_elem = {}
     for p in split_url:
@@ -1119,9 +1122,9 @@ if __name__ == '__main__':
 # done count to moves
 # done (M U M' U')2 like algs to parser
 # done fix UD algs
-# diff moves misses by one from secnd alg
+# done diff moves misses by one from secnd alg
 # done corners/edges seperation
-
+# done parsing solves from alg.cubing.net and cubedb.net
 
 # feature:
 # supports all oreintations' all buffers' 2twist,3twist, 2flip 4 flip

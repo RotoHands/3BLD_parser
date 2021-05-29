@@ -1,5 +1,4 @@
-from bld_comm_parser import solve_parser
-from bld_comm_parser import reverse_alg
+from bld_comm_parser import solve_parser, reverse_alg, alg_maker
 import permutation
 import re
 from difflib import SequenceMatcher
@@ -960,12 +959,18 @@ def count_moves_in_alg(alg):
         count += alg.count(m)
     return count
 
+def check_if_comm_or_memo(alg):
+    moves = ['U', 'R', 'F', 'D', 'L', 'B']
+    for m in moves:
+        if m in alg:
+            return True
+    return False
+
 def parse_solve(scramble, solve_attampt):
     """
     main function, parses the solve. most of the data will be in cube.solve stats
     """
-    solve = solve_parser(solve_attampt)
-    print(solve)
+    solve, solve_split = solve_parser(solve_attampt)
     SOLVED = "0UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
     cube = Cube()
     cube.comms_unparsed = keep_comms_unparsed(solve_attampt)
@@ -986,8 +991,16 @@ def parse_solve(scramble, solve_attampt):
     move_in_solve = cube.solve.split()
     max_piece_place = 0
     flag = False
+    flag_rot = False
     current_alg = []
+    if len(solve_split) > 1:
+        flag_rot = True
+        first_alg = str(alg_maker(solve_split[0]))
+    count_solve_split = 0
     while move_in_solve[count] in cube.rotation:
+        if flag_rot:
+             if count >= len(first_alg.split()): # for cases that the first alg also starts with rotation
+                 break
         flag = True
         original_move = move_in_solve[count]
         current_alg.append(original_move)
@@ -1017,45 +1030,51 @@ def parse_solve(scramble, solve_attampt):
         solved_cor = cube.count_solved_cor()
         diff = cube.diff_states(cube.perm_to_string(cube.current_perm))
         if diff > cube.diff_to_solved_state and (count - max_piece_place >= 4):
+            temp_count = count - max_piece_place
             max_piece_place = count
             cube.last_solved_pieces = cube.diff_solved_state()
             comm, piece_type = cube.parse_solved_to_comm()
-            cube.algs_executed.append([" ".join(current_alg), piece_type])
-            count_moves = count_moves_in_alg(" ".join(current_alg))
-            count_moves_from_start += count_moves
-            current_alg = []
-            if piece_type["edge"]:
-                piece = "edges"
-            elif piece_type["corner"]:
-                piece = "corners"
+            if len(comm) > 3 and temp_count < 8:
+                 cube.solve_stats.append(
+                     {"count": count, "move": original_move, "ed": solved_edges, "cor": solved_cor, "comment": "",
+                      "diff": diff, "perm": cube.perm_to_string(cube.current_perm)})
             else:
-                piece = "parity"
-            cube.current_max_perm_list = cube.current_perm
-            if cube.parse_to_lp:
-                buffer_lp_edge = cube.dict_lp[cube.dict_stickers[cube.buffer_ed]]
-                buffer_lp_cor = cube.dict_lp[cube.dict_stickers[cube.buffer_cor]]
+                cube.algs_executed.append([" ".join(current_alg), piece_type])
+                count_moves = count_moves_in_alg(" ".join(current_alg))
+                count_moves_from_start += count_moves
+                current_alg = []
                 if piece_type["edge"]:
-                    if buffer_lp_edge in comm and " flip" not in comm:
-                        comment = "".join(comm[1:])
-                    else:
-                        comment = "".join(comm)
+                    piece = "edges"
                 elif piece_type["corner"]:
-                    if buffer_lp_cor in comm and " twist" not in comm:
-                        comment = "".join(comm[1:])
-                    else:
-                        comment = "".join(comm)
+                    piece = "corners"
                 else:
-                    comment = "{} {}".format("".join(comm[:2]), "".join(comm[2:]) )
+                    piece = "parity"
+                cube.current_max_perm_list = cube.current_perm
+                if cube.parse_to_lp:
+                    buffer_lp_edge = cube.dict_lp[cube.dict_stickers[cube.buffer_ed]]
+                    buffer_lp_cor = cube.dict_lp[cube.dict_stickers[cube.buffer_cor]]
+                    if piece_type["edge"]:
+                        if buffer_lp_edge in comm and " flip" not in comm:
+                            comment = "".join(comm[1:])
+                        else:
+                            comment = "".join(comm)
+                    elif piece_type["corner"]:
+                        if buffer_lp_cor in comm and " twist" not in comm:
+                            comment = "".join(comm[1:])
+                        else:
+                            comment = "".join(comm)
+                    else:
+                        comment = "{} {}".format("".join(comm[:2]), "".join(comm[2:]) )
 
-                comment = "{}   {}/{}".format(comment, count_moves,count_moves_from_start) if cube.gen_with_moves else comment
+                    comment = "{}   {}/{}".format(comment, count_moves,count_moves_from_start) if cube.gen_with_moves else comment
 
-            else:
-                comment = "{}  {}/{}".format(" ".join(comm[:]), count_moves,count_moves_from_start) if cube.gen_with_moves else "{}".format(" ".join(comm[:]))
+                else:
+                    comment = "{}  {}/{}".format(" ".join(comm[:]), count_moves,count_moves_from_start) if cube.gen_with_moves else "{}".format(" ".join(comm[:]))
 
-            if piece != cube.flag_piece_type:
-                comment = "{}#{}".format(piece, comment)
-                cube.flag_piece_type = piece
-            cube.solve_stats.append({"count" : count,"move": original_move,"piece" : piece, "diff_moves": count_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : comment,  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
+                if piece != cube.flag_piece_type:
+                    comment = "{}#{}".format(piece, comment)
+                    cube.flag_piece_type = piece
+                cube.solve_stats.append({"count" : count,"move": original_move,"piece" : piece, "diff_moves": count_moves, "ed" : solved_edges,"cor" :  solved_cor, "comment" : comment,  "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
         else:
             cube.solve_stats.append({"count" : count,"move": original_move,"ed" : solved_edges,"cor" :  solved_cor, "comment" : "" , "diff" : diff, "perm" : cube.perm_to_string(cube.current_perm)})
 

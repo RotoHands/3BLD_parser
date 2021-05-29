@@ -214,16 +214,18 @@ def alg_maker(comm_str):
     return final
 
 def solve_parser(solve):
-
     description_words = ["corners", "edges", "parity"]
     solve_split =  solve.split("\r\n")
+    if len(solve_split) < 2 and "\n" in solve:
+        solve_split = solve.split("\n")
+    print(solve_split)
     solve = ""
     for comm in solve_split:
         if comm.find("/") != -1:
                 comm = comm[:comm.find("/")]
         if comm not in description_words:
             solve += " " + str(alg_maker(comm))
-    return solve
+    return (solve, solve_split)
 def main():
     pass
 if __name__ == '__main__':

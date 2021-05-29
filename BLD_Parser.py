@@ -964,8 +964,8 @@ def parse_solve(scramble, solve_attampt):
     """
     main function, parses the solve. most of the data will be in cube.solve stats
     """
-
     solve = solve_parser(solve_attampt)
+    print(solve)
     SOLVED = "0UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
     cube = Cube()
     cube.comms_unparsed = keep_comms_unparsed(solve_attampt)
@@ -1085,6 +1085,25 @@ def parse_smart_cube_solve(cube):
         else:
             SOLVE += " " + comm[0]
     return parse_solve(SCRAMBLE, SOLVE)
+
+def parse_url(url):
+    split_url = url.split("&")
+    url_elem = {}
+    for p in split_url:
+        if "http" in p:
+            website_split = p.split("?")
+            url_elem["name"] = website_split[0]
+            split_second_part = website_split[1].split("=")
+            url_elem[split_second_part[0]] = split_second_part[1]
+        elif "setup" in p or "scramble" in p:
+            url_elem["scramble"] =p.split("=")[1].replace("-", "'").replace("_", " ")
+        else:
+            url_elem[p.split("=")[0]] = p.split("=")[1]
+    before = ('-', '_', '%0A', '%5B', '%5D', '%2F', '%2C','%3A')
+    after =  ("'", " ", "\r\n", "[", "]", "/", ",", ":")
+    for i in range (len(before)):
+        url_elem["alg"] = url_elem["alg"].replace(before[i], after[i])
+    return url_elem
 
 def main():
     pass

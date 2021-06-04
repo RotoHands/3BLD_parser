@@ -1,0 +1,12 @@
+L' D2 F2 D2 F2 R D' L U2 B' U2 R F D2 R B' F' Rw Uw
+
+z' y2 
+[U D R': [R' D R, U2]]
+[R' U: [U, R' D R]]
+[L F': [U2, L D L']]
+[R, U M' U']
+Rw U R' U' M U R U' R' 
+[R2, S']
+[x': [L E' L', U']]
+[L': [L' E L, U2]]
+[M: [U', R' E R]] 	

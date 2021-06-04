@@ -60,20 +60,20 @@ R' D' R D R' D' R U U R' D R D' R' D R U U // CA twist   18/129
 </p>
 </details>
 
-###A bit more details
+### A bit more details
 
-####Motivation
+#### Motivation
 The main motivation came from the need of making it easier to do deliberate practice in 3bld. Moreover I wanted to make it easier to learn from others solves while still using your letter scheme and make the algs notation more intuitive.
 Another reason is that a lot of features of 3bld is missing in current smart cube timers. I wanted to make it easy for them to add the features of supporting 3bld solves to their websites and hope we will see more timers supporting it soon!
 
-####How it works? A short description of the main problem and solution behind the software.
+#### How it works? A short description of the main problem and solution behind the software.
 Last time I attempted to recognize the move of the mistake by tracking the number of pieces solved. This time I wanted to also be able to separate between the algs, but with only tracking the number of solved pieces I didn't manage to find a way to implement it.
 I realized that if I am only looking at number of solved pieces I'm ignoring large part the information about the cube state, so decided to change the core idea. I didn't want to get into complicated programming of a cube model, and didn't want do math stuff in order to know how to separate the comms.
 I found a very elegant solution to this problem. I represented the cube as a string of 54 chars as usually implemented in the kociemba algorithm. Then I encoded each move to an equal permutation on the chars in the string. Then I saw that if I use Python SequenceMatcher from the difflib, which detects how close are two strings to each other, then it can detect precisely when the commutator ends! 
 For example (move - diff between string representation) : D R U R' D R U' R' D D - 0.75, 0.63, 0.52, 0.58, 0.59, 0.54, 0.62, 0.71, 0.73, 0.89 (really pleased from this solution 😊).
 Rest of the programming was mainly on adding more features and trying to make it easy as possible to implement on your own.
 
-####Why these features?
+#### Why these features?
 recognize mistakes in solve, points to last place execution were right. this is one of the most time-consuming things I do when I analyze my 3bld solves and I found myself getting frustrated from wasting my time on searching for the mistake.
 tracking the commutator and converting to letter pairs. mainly for being able to easily add statics about to comms to a database and later drill the slowest comms.
 expand commutators to their full alg, after cancelling moves. Makes it much simpler and intuitive, you don't need to think about inverting the algs, and cancellation become much clearer.
@@ -81,26 +81,36 @@ customizable letter pairs. If you want to see other people solves in your letter
 converting parallel layers to slice moves. a main feature in smart cube timers that doesn't exist and is crucial in bld solving. It still isn't perfect, but it is right 90% of the times (you may see rotations in end of algs when parsing smart cube solves. This is a correction I had to add for some cases). this is quite challenging because I didn't find a general solution so I had to program it under several assumptions (see in github files for more information).
 compatible with cubedb.net and alg.cubing.net. Mainly to make it as easy as possible to parse the solve you want.
 
-####Examples of features on [Sebastiano Tronto 22.67 3BLD avg NR](https://www.youtube.com/watch?v=c0R2ZSN_suk) (UR, UBL)
-####Solve 1
+#### Examples of features on [Sebastiano Tronto 22.67 3BLD avg NR](https://www.youtube.com/watch?v=c0R2ZSN_suk) (UR, UBL)
+#### Solve 1
 <details>
   <summary>parsed</summary>
 
 <p>
 Features : Alg extension, move count, gen cubede.net url, letter pair track
 
-U2 R2 B2 L' U2 L2 R B2 R' B' R D' L' U B2 D' B L' D R Uw'
+`U2 R2 B2 L' U2 L2 R B2 R' B' R D' L' U B2 D' B L' D R Uw'`
 
-F2 R U2 R' U' R U' R' L' U2 L U L' U L F2
+`F2 R U2 R' U' R U' R' L' U2 L U L' U L F2`
+
 `[D: [L D' L', U']]`
+
 `[U D' R': [R' D R, U']]`
+
 `[L', U R' U']`
+
 `[R Lw: [U' M' U, R']]`
+
 `[R U R': [S, R2]]`
+
 `[U R U': [S, R2]]`
+
 `[L' U': [U' L' U, M']]`
+
 `[Rw: [U' R' U, M']]`
+
 `[R2 U: [S, R2]]`
+
 
 </p>
 </details>

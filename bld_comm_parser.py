@@ -218,7 +218,9 @@ def solve_parser(solve):
     solve_split =  solve.split("\r\n")
     if len(solve_split) < 2 and "\n" in solve:
         solve_split = solve.split("\n")
-    print(solve_split)
+    for a in solve_split:
+        if a == '':
+            solve_split.remove(a)
     solve = ""
     for comm in solve_split:
         if comm.find("/") != -1:

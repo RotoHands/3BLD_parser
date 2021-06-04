@@ -345,11 +345,17 @@ class Cube:
         """
         gets the corner buffer name and return its number in the cube permutation
         """
+
         for i in range(1,55):
             if  i in self.dict_stickers:
                 if self.dict_stickers[i] == cor_name:
                     return i
+        cor_name = "{}{}{}".format(cor_name[0], cor_name[2], cor_name[1])
 
+        for i in range(1, 55):
+            if i in self.dict_stickers:
+                if self.dict_stickers[i] == cor_name:
+                    return i
     def get_buffer_ed(self, ed_name):
         """
         gets the edge buffer name and return its number in the cube permutation
@@ -943,6 +949,8 @@ def keep_comms_unparsed(solve):
     """
     description_words = ["corners", "edges", "parity", ""]
     solve_split =  solve.split("\r\n")
+    if len(solve_split) == 1:
+        solve_split = solve.split("\n")
     comms = []
     for comm in solve_split:
         if comm.find("/") != -1:
@@ -971,6 +979,7 @@ def parse_solve(scramble, solve_attampt):
     main function, parses the solve. most of the data will be in cube.solve stats
     """
     solve, solve_split = solve_parser(solve_attampt)
+
     SOLVED = "0UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
     cube = Cube()
     cube.comms_unparsed = keep_comms_unparsed(solve_attampt)

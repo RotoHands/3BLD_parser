@@ -9,25 +9,15 @@ TL;DR
 
 main features:
 - separating the solve commutators
-    
 - tracking the commutator and converting to letter pairs
-    
 - converting parallel layers to slice moves
-
 - customizable letter pairs
-
 - customizable buffers
-
 - recognize twist, flips and cycles outside the buffer
-
 - recognize mistakes in solve, points to last place execution was right  
-
 - expand commutators to their full alg, after cancelling moves
-
 - compatible with solves from cubedb.net and alg.cubing.net
-
 - can generate url link to cubdb.net
-    
 - works on 3style, M2, OP
 
 [github repo](https://github.com/RotoHands/3BLD_parser)

@@ -2,8 +2,6 @@ Hi,
 After [last year](https://www.speedsolving.com/threads/3bld-dnf-analyzer-new-software-i-made.76945/) software attempt of making a more efficient way to train 3bld, here is this year version!
 I worked on a new version for the last couple of months and focused mainly on analyzing 3bld solves.
 
-TL;DR
-
 main features:
 - separating the solve commutators
 - tracking the commutator and converting to letter pairs
@@ -73,4 +71,4 @@ R' D' R D R' D' R U U R' D R D' R' D R U U // CA twist   18/129
 </details>
 
 ### A bit more details
-checkout this [post]()
+checkout this [post](https://www.speedsolving.com/threads/smart-cube-bld-analyzer.84773/)

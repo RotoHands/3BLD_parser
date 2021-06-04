@@ -1,51 +1,306 @@
-# 3BLD_parser
+Hi,
 
-## the program get a raw reconstruction (only moves) and output a reconstruction of the comms you used
-## the programm can help if:
+After last year software attempt of making a more efficient way to train 3bld, here is this year version!
 
-you reconstruct a bld solve but dont want to follow and write the comms but only to trace the actual moves  
-you have a smart cube and you want to auto reconstruct the solution to bld (checkout my smart cube DNF analyzer [repo](https://github.com/RotoHands/RotoDNF_analyzer))  
-you look at a reconstruction and the comms are written in [A , B] format' and you want to see the final alg (basicilly after all the cancellations)
+I worked on a new version for the last couple of months and focused mainly on analyzing 3bld solves.
 
 
-UF -> UB -> LB
-U' R U' D B' U U B U D' R' U'
-U' R E' y' B' U U B E y R' U'
-U' R E' R' U U R E R' U'
+TL;DR
+
+main features:
+    * separating the solve commutators
+    * tracking the commutator and converting to letter pairs
+    * converting parallel layers to slice moves
+    * customizable letter pairs
+    * customizable buffers
+    * recognize twist, flips and cycles outside the buffer
+    * recognize mistakes in solve, points to last place execution was right  
+    * expand commutators to their full alg, after cancelling moves
+    * compatible with solves from cubedb.net and alg.cubing.net
+    * can generate url link to cubdb.net
+    * works on 3style, M2, OP
+
+[github repo](https://github.com/RotoHands/3BLD_parser)
+## example solve - smart cube (UF, UFR, Speffz)
+<details>
+  <summary>unparsed</summary>
+
+<p>
+R2 U' B2 F2 L2 U' R2 D F2 U2 B2 R' D' L' D F' D2 B2 D2 L2 //scramble
+
+U' F' B U B U' F B' R B' R' U U' D R' U' D B B U D' R' U D' 
+R U' R' U D' F U F' U' D R' F R F' B U' U' F B' R F' R U' U'
+L D U' F' U' F U D' L' U' U D' F U' D R' U' R U D' F' D R F' 
+L' F R' L D' L D L' D' L' D R L' F' L F R' L U' D' R' U U R'
+D R U U R' D' R2 U D D R U R' D R U' R' D D R' U R' D' R U 
+U R' D R U R R' D' R D R' D' R U U R' D R D' R' D R U U
+</p>
+</details>
+[SPOILER="parsed"]
+
+R2 U' B2 F2 L2 U' R2 D F2 U2 B2 R' D' L' D F' D2 B2 D2 L2 //scramble
+
+//edges
+
+U' S R B R' S' R B' R' U // SQ   10/10 
+
+U' D R' E' R R E R' U D' // UR   10/20 
+
+R U' R' E R U R' E' // JF   8/28 
+
+R' F R S R' R' S' R F' R // EO   10/38 
+
+U' U' L E' L' U' L E L' U' // PB   10/48 
+
+E R E' R' U' R E R' D y // TB   9/57 
+
+R F' L' F M' F' L F L' x' // KG   9/66 
+
+D' L' D M D' L D M' // HK   8/74 
+
+//corners
+
+U' D' R' U U R' D R U U R' D' R2 U D // VN   15/89 
+
+D R U R' D R U' R' D D // LH   10/99 
+
+R' U R' D' R U U R' D R U R // OF   12/111 
+
+R' D' R D R' D' R U U R' D R D' R' D R U U // CA twist   18/129 
+
+[/SPOILER]
+
+[/SPOILER]
 
 
-
-## example:
-scramble  
-L2 U R2 F2 R2 B2 D2 U F2 U L2 R B L' F D L' D' L2 F2 U'
-### before 
- U L' L' R' R U' R' L F L' L' F' R L' R' L F R' F' L' R U R U' 
-F B' U F' U' F' B L F L' U U' R' U' R' U' D B B D' U R' U R 
-U' D F' U F U D' L' U' L D R L' F R' L D R L' F R' L R' U D' 
-F U' F' U' D R U U' R' R' D' R U U R' D R U U R U U D' R U' R' 
-D R U R' U' U D U R' D R U2 R' D' R D' U D R' D' R U' R' D R D'
-R U R' F' R U R' U' R' F R R U' R' U'  
-[Cubedb](https://www.cubedb.net/?rank=3&title=3BLD_Parser&scramble=L2_U_R2_F2_R2_B2_D2_U_F2_U_L2_R_B_L-_F_D_L-_D-_L2_F2_U-_&alg=_U_L-_L-_R-_R_U-_R-_L_F_L-_L-_F-_R_L-_R-_L_F_R-_F-_L-_R_U_R_U-_%0AF_B-_U_F-_U-_F-_B_L_F_L-_U_U-_R-_U-_R-_U-_D_B_B_D-_U_R-_U_R_%0AU-_D_F-_U_F_U_D-_L-_U-_L_D_R_L-_F_R-_L_D_R_L-_F_R-_L_R-_U_D-_F_U-_F-_U-_D_R_U_U-_R-_R-_D-_R_U_U_R-_D_R_U_U_R_U_U_D-_R_U-_R-_D_R_U_R-_U-_U_D_U_R-_D_R_U2_R-_D-_R_D-_U_D_R-_D-_R_U-_R-_D_R_D-_R_U_R-_F-_R_U_R-_U-_R-_F_R_R_U-_R-_U-%0A)
-
-### after
-U L' L' R' R U' R' L F L' L' F' R L' //UF FD DL  
-R' L F R' F' L' R U R U' //UF BU RB  
-F B' U F' U' F' B L F L' //UF UR LU  
-U U' R' U' R' U' D B B D' U R' U R //UF FR BL  
-U' D F' U F U D' L' U' L //UF RF FL  
-D R L' F R' L D R L' F R' L //UF BD RD  
-R' U D' F U' F' U' D R U //UF LF UR  
-U' R' R' D' R U U R' D R U U R U //UFR RBU UFL  
-U D' R U' R' D R U R' U' //UFR RBD FRD  
-U D U R' D R U2 R' D' R D' //UFR BLD UBL  
-U D R' D' R U' R' D R D' //UFR FDL UBR  
-R U R' F' R U R' U' R' F R R U' R' U' //UF UR UFR UBR  
-
-[Cubedb](https://www.cubedb.net/?rank=3&title=3BLD_Parser&scramble=L2_U_R2_F2_R2_B2_D2_U_F2_U_L2_R_B_L-_F_D_L-_D-_L2_F2_U-_&alg=_U_L-_L-_R-_R_U-_R-_L_F_L-_L-_F-_R_L-_%2F%2FUF_FD_DL%0AR-_L_F_R-_F-_L-_R_U_R_U-_%2F%2FUF_BU_RB%0AF_B-_U_F-_U-_F-_B_L_F_L-_%2F%2FUF_UR_LU%0AU_U-_R-_U-_R-_U-_D_B_B_D-_U_R-_U_R_%2F%2FUF_FR_BL%0AU-_D_F-_U_F_U_D-_L-_U-_L_%2F%2FUF_RF_FL%0AD_R_L-_F_R-_L_D_R_L-_F_R-_L_%2F%2FUF_BD_RD%0AR-_U_D-_F_U-_F-_U-_D_R_U_%2F%2FUF_LF_UR%0AU-_R-_R-_D-_R_U_U_R-_D_R_U_U_R_U_%2F%2FUFR_RBU_UFL%0AU_D-_R_U-_R-_D_R_U_R-_U-_%2F%2FUFR_RBD_FRD%0AU_D_U_R-_D_R_U2_R-_D-_R_D-_%2F%2FUFR_BLD_UBL%0AU_D_R-_D-_R_U-_R-_D_R_D-_%2F%2FUFR_FDL_UBR%0AR_U_R-_F-_R_U_R-_U-_R-_F_R_R_U-_R-_U-_%2F%2FUF_UR_UFR_UBR%0A)
+A bit more details
 
 
-## Features  
-- you can implement your own letter scheme so you will see letter pairs insted of UFR, UF...
-- you can customize it to your buffers
-- if you DNFed due to execution error, it can auto detect where the mistake was
-- generates link to Cubedb of the solve
+Motivation
+
+The main motivation came from the need of making it easier to do deliberate practice in 3bld. Moreover I wanted to make it easier to learn from others solves while still using your letter scheme and make the algs notation more intuitive.
+
+Another reason is that a lot of features of 3bld is missing in current smart cube timers. I wanted to make it easy for them to add the features of supporting 3bld solves to their websites and hope we will see more timers supporting it soon!
+
+
+How it works? A short description of the main problem and solution behind the software.
+
+
+Last time I attempted to recognize the move of the mistake by tracking the number of pieces solved. This time I wanted to also be able to separate between the algs, but with only tracking the number of solved pieces I didn't manage to find a way to implement it.
+
+I realized that if I am only looking at number of solved pieces I'm ignoring large part the information about the cube state, so decided to change the core idea. I didn't want to get into complicated programming of a cube model, and didn't want do math stuff in order to know how to separate the comms.
+
+I found a very elegant solution to this problem. I represented the cube as a string of 54 chars as usually implemented in the kociemba algorithm. Then I encoded each move to an equal permutation on the chars in the string. Then I saw that if I use Python SequenceMatcher from the difflib, which detects how close are two strings to each other, then it can detect precisely when the commutator ends! 
+
+For example (move - diff between string representation) : D R U R' D R U' R' D D - 0.75, 0.63, 0.52, 0.58, 0.59, 0.54, 0.62, 0.71, 0.73, 0.89 (really pleased from this solution 😊).
+
+Rest of the programming was mainly on adding more features and trying to make it easy as possible to implement on your own.
+
+
+Why these features?
+
+    recognize mistakes in solve, points to last place execution were right. this is one of the most time-consuming things I do when I analyze my 3bld solves and I found myself getting frustrated from wasting my time on searching for the mistake.
+    tracking the commutator and converting to letter pairs. mainly for being able to easily add statics about to comms to a database and later drill the slowest comms.
+    expand commutators to their full alg, after cancelling moves. Makes it much simpler and intuitive, you don't need to think about inverting the algs, and cancellation become much clearer.
+    customizable letter pairs. If you want to see other people solves in your letter pair scheme more easily, I think that UBR-UBL-BUFFER notation isn't intuitive enough.
+    converting parallel layers to slice moves. a main feature in smart cube timers that doesn't exist and is crucial in bld solving. It still isn't perfect, but it is right 90% of the times (you may see rotations in end of algs when parsing smart cube solves. This is a correction I had to add for some cases). this is quite challenging because I didn't find a general solution so I had to program it under several assumptions (see in github files for more information).
+    compatible with cubedb.net and alg.cubing.net. Mainly to make it as easy as possible to parse the solve you want.
+
+
+Examples of features on Sebastiano Tronto 22.67 3BLD avg NR (UR, UBL)
+
+[SPOILER="Solve 1"]
+
+Features : Alg extension, move count, gen cubede.net url, letter pair track
+
+[SPOILER="Unparsed"]
+
+U2 R2 B2 L' U2 L2 R B2 R' B' R D' L' U B2 D' B L' D R Uw'
+
+
+F2 R U2 R' U' R U' R' L' U2 L U L' U L F2
+
+[D: [L D' L', U']]
+
+[U D' R': [R' D R, U']]
+
+[L', U R' U']
+
+[R Lw: [U' M' U, R']]
+
+[R U R': [S, R2]]
+
+[U R U': [S, R2]]
+
+[L' U': [U' L' U, M']]
+
+[Rw: [U' R' U, M']]
+
+[R2 U: [S, R2]]
+
+[/SPOILER]
+
+[SPOILER="Parsed"]
+
+cubedb.net
+
+U2 R2 B2 L' U2 L2 R B2 R' B' R D' L' U B2 D' B L' D R Uw' 
+
+
+//corners
+
+F2 R U2 R' U' R U' R' L' U2 L U L' U L F2 // BL twist   16/16 
+
+D L D' L' U' L D L' U D' // LD   10/26 
+
+U D' R2 D R U' R' D' R U R D U' // JV   13/39 
+
+L' U R' U' L U R U' // TI   8/47 
+
+//edges
+
+R l U' M' U R' U' M U R l' R' // HJ   12/59 
+
+R U R' S R2 S' R' U' R' // CV   9/68 
+
+U R U' S R2 S' R2 U R' U' // DT   10/78 
+
+L' U2 L' U M' U' L U M U L // FX   11/89 
+
+r U' R' U M' U' R U M r' // KW   10/99 
+
+R2 U S R2 S' R2 U' R2 // AC   8/107 
+
+[/SPOILER]
+
+[/SPOILER]
+
+[SPOILER="Solve 2"]
+
+Features: keep comms, raw tracking
+
+[SPOILER="Unparsed"]
+
+L' D2 F2 D2 F2 R D' L U2 B' U2 R F D2 R B' F' Rw Uw
+
+
+z' y2 
+
+[U D R': [R' D R, U2]]
+
+[R' U: [U, R' D R]]
+
+[L F': [U2, L D L']]
+
+[R, U M' U']
+
+Rw U R' U' M U R U' R' 
+
+[R2, S']
+
+[x': [L E' L', U']]
+
+[L': [L' E L, U2]]
+
+[M: [U', R' E R]] 
+
+[/SPOILER]
+
+[SPOILER="Parsed"]
+
+ z' y2 // memo 
+
+
+//corners
+
+ [U D R': [R' D R, U2]]// UBL LFU DBL  13/13 
+
+ [R' U: [U, R' D R]]// UBL BRD LFD  11/24 
+
+ [L F': [U2, L D L']]// UBL BUR FUR  12/36 
+
+
+//edges
+
+ [R, U M' U']// UR FD FR  8/44 
+
+ Rw U R' U' M U R U' R' // UR FU UB  9/53 
+
+ [R2, S']// UR DL DR  4/57 
+
+ [x': [L E' L', U']]// UR LB DB  8/65 
+
+ [L': [L' E L, U2]]// UR RB FL  9/74 
+
+ [M: [U', R' E R]] // UR LF BU  10/84 
+
+[/SPOILER]
+
+[/SPOILER]
+
+[SPOILER="Solve 3"]
+
+[SPOILER="Unparsed"]
+
+F2 L2 R2 D2 L2 D' L2 B U L2 R2 U2 L U' B' F U F U' Rw' Uw
+
+z y2
+
+z' [U' R' U, M'] z 
+
+[Rw U2 Rw', B']
+
+[R D' R': [R' D R, U2]]
+
+[R': [R' D R, U2]]
+
+[R E R', U2]
+
+[L2: [U' M U, L']]
+
+[U' M' U': [M, U2]]
+
+[R' S' R U: [M', U2]] 
+
+[/SPOILER]
+
+[SPOILER="Parsed"]
+
+z y2 // memo 
+
+//edges
+
+z' U' R' U M' U' R U M z // PLS   8/8 
+
+//corners
+
+r U2 r' B' r U2 r' B // HK   8/16 
+
+R D' R2 D R U2 R' D' R U2 R D R' // WC   13/29 
+
+R2 D R U2 R' D' R U2 R // GQ   9/38 
+
+//edges
+
+R E R' U2 R E' R' U2 // DO   8/46 
+
+L2 U' M U L' U' M' U L' // GH   9/55 
+
+U' M' U' M U2 M' U' M U // QI   9/64 
+
+R' S' R U M' U2 M U R' S R // UN   11/75 
+
+[/SPOILER]
+
+[/SPOILER]
+
+
+Notes:
+
+    if the parsing doesn't work, try to change the DIFF_BETWEEN_ALGS variable between 0.88-0.89
+    it is not optimized for cancellations (you see the limitation in Max Hilliard WR solve - here)
+    I did most of the developing and testing on 3style solves, so improvements may be needed to M2 and OP
+    everything is customizable through the .env file.
+    I also have a github repo for drilling 3style algs with smart cube (here), it is a not as easy to clone to yourself (I didn't wrote it very customizable) but I’ll be glad to help!
+
+Hope this will help making 3bld improvement be a lot faster, less frustrating and make more cubers to get into 3bld😊

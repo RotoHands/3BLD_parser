@@ -1,8 +1,16 @@
-R2 U' B2 F2 L2 U' R2 D F2 U2 B2 R' D' L' D F' D2 B2 D2 L2
+L L U R R U U B U' B' U U L' D' L' D F' F' D' D' F' F' L' D' L L U U R R F' F' L F' F' 
 
-U' F' B U B U' F B' R B' R' U U' D R' U' D B B U D' R' U D' 
-R U' R' U D' F U F' U' D R' F R F' B U' U' F B' R F' R U' U'
-L D U' F' U' F U D' L' U' U D' F U' D R' U' R U D' F' D R F' 
-L' F R' L D' L D L' D' L' D R L' F' L F R' L U' D' R' U U R'
-D R U U R' D' R2 U D D R U R' D R U' R' D D R' U R' D' R U 
-U R' D R U R R' D' R D R' D' R U U R' D R D' R' D R U U
+//edges
+D M D D M' D // VX   6/6 
+U' R' R' U' R E R' R' E' R U R R U // LD   14/20 
+M U' U' M' U' U' // AW   6/26 
+U' D R E' R' R' E R U D' // RU   10/36 
+L' U L E' L' U' L E // LP   8/44 
+U' D B' E B U' B' E' B U D' U // JB   12/56 
+//corners
+D U R U' R' D' R U R' U' // GK   10/66 
+U R D' R' U U R D R' U // HA   10/76 
+U' R D' R' U R' D R U R' D' R U' R D R' // BW   16/92 
+R' U' R' D' R U R' D R R // FB   10/102
+//mistake from here 
+B U' U' F R U' R' U' R U R' F' R U R' U' R' F R F' U U B' 
